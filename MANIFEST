@@ -1,0 +1,17 @@
+INSTALL
+Changes
+Makefile.PL
+Thesaurus.pm
+MANIFEST
+examples/thesaurus.portuguese
+examples/thesaurus.english
+examples/animal.the
+examples/example.pl
+README
+t/0_simple.t
+t/9_big.t
+t/a.the
+t/dup.the
+t/b.the
+t/1_join.t
+internals.pod

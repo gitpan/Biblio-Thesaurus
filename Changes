@@ -1,0 +1,88 @@
+Revision history for Perl extension Biblio::Thesaurus.
+
+0.15 Fri Nov 15 08:59:59 2002
+	- More options to navigate method (level1hide)
+	- Ignore repeated terms;
+	- Removed Library::MLang dependency;
+        - Renamed, again, to Biblio::Thesaurus;
+
+0.14 Sat May 31 08:09:10 2002
+	- Added more options to navigate method (level2hide,
+          level2size, scriptname)
+	- Removed some warnings sent to STDOUT;
+
+0.13 Thu Dec 19 02:03:04 2001
+	- Added the no title and the expand options to the navigate
+          method;
+
+0.12  Wed Dec 01 02:03:04 2001
+	- More tests
+	- Some bug fixes
+
+0.11  Fri Nov 02 08:32:99 2001
+	- Bug fixes
+	- Added some error handling when loading ISOs
+	- Type case maintained
+	- More structure for multi-lingue thesaurus
+	- Added some more tests
+
+0.10  Sat Sep 08 21:59:59 2001
+	- extern class definition;
+	- transitive closure function;
+	- depthfirst function;
+	- navigate function with custom expansion;
+	- auto-completion after ISO load;
+	- language class definition;
+	- navigation method restructured for language usage;
+	- navigation method does not require script name, anymore;
+	- description command support multi-language;
+	- renamed languages and setLanguages commands to
+	  interfaceLanguages and interfaceSetLanguages;
+	- corrected bug on autocomplete function;
+	- top command added
+
+0.09  Fri Jan 19 20:01:10 2001
+	- Methods renamed without the thesaurus preffix;
+	- thesaurusStore function renamed to storeOn;
+	- thesaurusDump function renamed to save;
+	- Function getHTMLTop;
+	- i18n documentation;
+	- dt and full_dt functions (see pod...).
+
+0.08  Sun Jan  7 16:49:19 2001
+	- Multi-language support.
+
+0.07  Fri Jan  5 11:10:09 2001
+	- Documentation in English.
+
+0.06  Thu Jan  4 20:46:13 2001
+	- Renamed to be included under Library modules.
+
+0.05  Fri Dec 29 17:58:00 2000
+	- Corrected HTML generated code;
+	- Better documentation;
+	- Bug-fixes.
+
+0.04  Wed Dec 27 17:12:28 2000
+	- Functions:
+	  > thesaurusEdit;
+	  > thesaurusNavigate.
+	- bug-fixes.
+
+0.03  Wed Dec 27 10:00:00 2000
+	- Functions:
+	  > thesaurusAddTerm;
+	  > thesaurusAddRelations;
+	  > thesaurusDeleteTerm.
+
+0.02  Tue Dec 26 15:36:09 2000
+	- Functions:
+	  > thesaurusLoad;
+	  > thesaurusComplete;
+	  > thesaurusGetHTMLTerm;
+          > thesaurusDumpHTML;
+          > thesaurusAddInverse;
+          > thesaurusDump.
+
+0.01  Tue Nov 28 15:51:04 2000
+	- original version; created by h2xs 1.19.

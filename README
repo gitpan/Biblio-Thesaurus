@@ -1,0 +1,18 @@
+
+   Biblio::Thesaurus
+ =====================
+
+  This is a module to process a slighty augmented ISO Thesaurus. It
+contains a certain number of commands to add more functionality and
+information over the Thesaurus.
+
+  Is supports ISO2788 thesaurus and Multilingual Thesaurus.
+
+   Authors
+ ===========
+
+    Alberto M. Simões   (albie@alfarrabio.di.uminho.pt)
+    José João Almeida   (jj@di.uminho.pt)
+    Sara A.G. Correia
+
+
