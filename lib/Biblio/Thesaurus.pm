@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 ##
 #
@@ -133,13 +133,7 @@ sub _default_norelations {
 #
 #
 sub _default_inversions {
-  return {
-	  'NT' => 'BT',
-	  'BT' => 'NT',
-	  'RT' => 'RT',
-	  'USE' => 'UF',
-	  'UF' => 'USE',
-	 };
+  +{ NT => 'BT', BT => 'NT', RT => 'RT', USE => 'UF', UF => 'USE' };
 }
 
 ###
@@ -157,13 +151,13 @@ sub _translateTerm {
       if (defined($trad = $self->{$self->{baselang}}{$term}{$lang})) {
 	return $trad;
       } else {
-	return $self->getdefinition($term);
+	return "[$lang:".$self->getdefinition($term)."]";
       }
     } else {
-      return $self->getdefinition($term);
+      return "[$lang:".$self->getdefinition($term)."]";
     }
   } else {
-    return $self->getdefinition($term);
+    return "[$lang:".$self->getdefinition($term)."]";
   }
 }
 
@@ -521,6 +515,9 @@ sub thesaurusLoad {
     # define local variables
     my ($class,$term);
 
+    ## Concat lines that continue back in one
+    s/\n[ \t]+/ /g;  # Can't use \s because "\n" =~ m!\s!
+
     # The first line contains the term to be defined
     /(.*)\n/;
     $term = $1;
@@ -528,7 +525,7 @@ sub thesaurusLoad {
     # If the term is all spaces, go back...
     if ($term =~ /^\s+$/) {
       print STDERR "Term with only spaces ignored at block term ",$.-$ncommands,"\n\n";
-      $term = '#zbr'; # This makes the next look think this is a comment and ignore it
+      $term = '#zbr'; # This makes the next loop think this is a comment and ignore it
     }
 
     # Let's see if the term is commented...
@@ -545,21 +542,23 @@ sub thesaurusLoad {
       # OK! The term is *not* commented...
       # For each definition line...
       $_.="\n" unless /\n$/;
-      while (/(([^#\s]+)|#|)\s+(.*)\n/g) {
+      while (/(([^#\s]+)|#)\s+(.*)\n/g) {
 	# Is it commented?
 	unless ($1 eq "#") {
 	  # it seems not... set the relation class
-	  $class = uc($1) || $class;
+	  $class = uc($1); # || $class;... now multiline are handled before this
+
+	  print STDERR "** WARNING **: '$&'\n" unless $class;
 
 	  # See if $class has a description
 	  $self->{descriptions}{$class} = ucfirst(lc($class)) unless defined $self->{descriptions}{$class};
 	  ## $descs->{$class}= ucfirst(lc($class))  unless(defined($descs->{$class}));
 
 	  # divide the relation terms by comma unless it is a language or extern relation
-	  if ( defined($self->{externals}{$class}) ) {
+	  if ( exists($self->{externals}{$class}) && defined($self->{externals}{$class}) ) {
 	    ## $thesaurus{$term}{$class}.= ($1?"$3":" $3");
 	    $thesaurus{$term}{$class}.= ($thesaurus{$term}{$class}?" $3":"$3");
-	  } elsif (defined($self->{languages}{$class})) {
+	  } elsif (exists($self->{languages}{$class}) && defined($self->{languages}{$class})) {
 	    # $translations->{$class}->{_term_normalize($3)}.=$term;
 	    $self->{$class}{$3}.=$term;
 	    $self->{defined}{_term_normalize(lc($3))} = $term;

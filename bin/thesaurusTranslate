@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w -s
+
+use strict;
+use Biblio::Thesaurus;
+
+our ($comment);
+
+my $thesaurus = shift or die_usage();
+my $langorig  = shift or die_usage();
+my $langdest  = shift or die_usage();
+
+my $the = thesaurusLoad($thesaurus);
+
+our $termBody = "";
+
+$the->downtr( {
+	       -order    => [qw/PT FR SP ES EN DE BT NT RT MT UF USE SN/],
+	       -default  => sub {
+		 if ($the->{languages}{$rel}) {   ### Is a language
+		   if ($rel eq "$langdest") {
+		     $termBody .= "$langorig $term\n"
+		   } else {
+		     $termBody .= "$rel ".join(", ",@terms)."\n"
+		   }
+		 } else {
+		   if ($the->{externals}{$rel}) { ### Is external
+		     $termBody .= "$rel $term\n"
+		   } else {
+		     if ($comment) {
+		       $termBody .= join("", map {
+			 my $trans = $the->_translateTerm($_,$langdest);
+			 my $t;
+			 if ($t = missing_translation($trans)) {
+			   "# $rel $t\n";
+			 } else {
+			   "$rel $trans\n";
+			 }
+		       } @terms);
+		       } else {
+			 $termBody .= join("", map {"$rel ".$the->_translateTerm($_,$langdest)."\n"} @terms);
+		       }
+
+		   }
+		 }
+	       },
+	       -eachTerm => sub {
+		 my $tterm = $the->_translateTerm($term,$langdest);
+		 if ($comment) {
+		   my $t;
+		   if ($t = missing_translation($tterm)) {
+		     print "\n# $t\n$termBody";
+		   } else {
+		     print "\n$tterm\n$termBody";
+		   }
+		 } else {
+		   print "\n$tterm\n$termBody";
+		 }
+		 $termBody = "";
+	       },
+	      });
+
+
+
+sub die_usage {
+  die "Usage: $0 <thesaurus> <lang-source> <lang-target>\n";
+}
+
+sub missing_translation {
+  my $t = shift;
+  if ($t =~ m!^\[[A-Z]+:(.*)\]$!) {
+    return $1
+  } else {
+    return undef;
+  }
+}
+
+

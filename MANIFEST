@@ -7,9 +7,11 @@ examples/ex4.pl
 examples/ex5.pl
 examples/example.pl
 examples/secondorder.the
-examples/t2any
 examples/thesaurus.english
 examples/thesaurus.portuguese
+bin/thesaurus2any
+bin/thesaurus2htmls
+bin/thesaurusTranslate
 INSTALL
 lib/Biblio/Thesaurus.pm
 Makefile.PL
