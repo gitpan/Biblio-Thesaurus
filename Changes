@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.18 Wed Sep 29 16:25:00 2004
+	- Fixed problem with new 'append' function on CGI
+
 0.17 Fri Oct 31 10:11:12 2003
 	- Bug fixes
 

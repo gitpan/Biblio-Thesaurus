@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 ##
 #
@@ -163,7 +163,7 @@ sub translateTerm {
 ###
 #
 #
-sub append {
+sub appendThesaurus {
   my ($self,$other) = @_;
 
   # This way we handle full thesaurus objects or simple filename
@@ -312,7 +312,7 @@ sub thesaurusMultiLoad {
 
   my $self = thesaurusLoad(shift @files);
   while(@files) {
-    $self->append(shift @files);
+    $self->appendThesaurus(shift @files);
   }
 
   return $self;
@@ -1346,8 +1346,8 @@ Biblio::Thesaurus - Perl extension for managing ISO thesaurus
   $output = $obj->downtr(\%handler);
   $output = $obj->downtr(\%handler,'termo', ... );
 
-  $obj->append("iso-file");
-  $obj->append($tobj);
+  $obj->appendThesaurus("iso-file");
+  $obj->appendThesaurus($tobj);
 
   $obj->tc('termo', 'relation1', 'relation2');
   $obj->depth_first('term', 2, "NT", "UF")
@@ -1841,9 +1841,10 @@ http://natura.di.uminho.pt, and access the CVS tree.
 The example thesaurus file (C<examples/thesaurus>),
 
 Manpages:
-  Library::Simple(3)
-  Library::Catalog(3)
-  Library::Catalog::Bibtex(3)
+
+  Biblio::WebPortal(3)
+  Biblio::Catalog(3)
+  Biblio::Catalog::Bibtex(3)
   perl(1) manpages.
 
 =cut
