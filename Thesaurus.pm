@@ -29,12 +29,14 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 ##
 #
 #
-sub top_name {
+sub top_name { topName(@_) }
+
+sub topName {
   my ($self,$name) = @_;
   if($name){ $self->{name} = $name;}
   else {return $self->{name};}
@@ -66,8 +68,8 @@ sub baselang {
 sub terms {
   my ($self, $term, @rels) = @_;
   my $base = $self->{baselang};
-  return () unless $self->isdefined($term);
-  $term = $self->definition($term);
+  return () unless $self->isDefined($term);
+  $term = $self->_definition($term);
   return (map {
     if (defined($self->{$base}{$term}{$_})) {
       @{$self->{$base}{$term}{$_}}
@@ -78,19 +80,21 @@ sub terms {
 }
 
 ##
+# Parece-me que não está a ser usada.
 #
-#
-sub external {
-  my ($self,$term,$external) = @_;
-  $external = uc($external);
-  $term = $self->definition($term);
-  return $self->{$self->{baselang}}{$term}{$external};
-}
+# sub external {
+#   my ($self,$term,$external) = @_;
+#   $external = uc($external);
+#   $term = $self->definition($term);
+#   return $self->{$self->{baselang}}{$term}{$external};
+# }
 
 ###
 #
 #
-sub all_terms {
+sub all_terms { allTerms(@_) }
+
+sub allTerms {
   my $self = shift;
   return sort keys %{$self->{$self->{baselang}}};
 }
@@ -114,7 +118,7 @@ sub depth_first {
 ###
 #
 #
-sub default_norelations {
+sub _default_norelations {
   return {
 	  'URL'=> 1,
 	  'SN' => 1
@@ -124,7 +128,7 @@ sub default_norelations {
 ###
 #
 #
-sub default_inversions {
+sub _default_inversions {
   return {
 	  'NT' => 'BT',
 	  'BT' => 'NT',
@@ -137,7 +141,7 @@ sub default_inversions {
 ###
 #
 #
-sub translateTerm {
+sub _translateTerm {
   my ($self,$term,$lang) = @_;
 
   if ($lang) {
@@ -205,7 +209,7 @@ sub appendThesaurus {
   # VERSION: current module version
   $new->{version} = $VERSION;
 
-  sub ffjoin {
+  sub _ffjoin {
     # key, hash1ref, hash2ref
     my ($c,$a,$b) = @_;
     if (exists($a->{$c}) && exists($b->{$c})) {
@@ -220,34 +224,34 @@ sub appendThesaurus {
   }
 
   # Inverses: join hash tables... in conflict, $self is used
-  $new->{inverses} = ffjoin("inverses",$other,$self);
+  $new->{inverses} = _ffjoin("inverses",$other,$self);
 
   # Descriptions: in conflict, $self is used
-  $new->{descriptions} = ffjoin("descriptions",$other,$self);
+  $new->{descriptions} = _ffjoin("descriptions",$other,$self);
 
   # Externals: union
-  $new->{externals} = ffjoin("externals",$self,$other);
+  $new->{externals} = _ffjoin("externals",$self,$other);
 
   # Languages: union
-  $new->{languages} = ffjoin("languages",$self,$other);
+  $new->{languages} = _ffjoin("languages",$self,$other);
   # delete($new->{languages}{"?"}) if ($new->{baselang} ne "?");
 
   # Get terms for the new thesaurus
-  my @terms = set_of(keys  %{$self->{ $self->{baselang}}},
+  my @terms = _set_of(keys  %{$self->{ $self->{baselang}}},
 		     keys %{$other->{$other->{baselang}}});
 
   # Para cada termo do thesaurus...
   for my $term (@terms) {
 
     # existe em ambos...
-    if ($self->isdefined($term) && $other->isdefined($term)) {
-      my ($a_def,$b_def) = ($self->definition($term),
-                            $other->definition($term));
+    if ($self->isDefined($term) && $other->isDefined($term)) {
+      my ($a_def,$b_def) = ($self->_definition($term),
+                            $other->_definition($term));
       my $def = $a_def;
 
       $new->{defined}{lc($def)} = $def;
 
-      my @class = set_of(keys %{$self->{$self->{baselang}}{$a_def}},
+      my @class = _set_of(keys %{$self->{$self->{baselang}}{$a_def}},
 			 keys %{$other->{$other->{baselang}}{$b_def}});
 
       # para cada uma das suas relações...
@@ -290,11 +294,11 @@ sub appendThesaurus {
 	}
       }
 
-    } elsif ($self->isdefined($term)) {
-      $new->{defined}{lc($term)} = $self->definition($term);
+    } elsif ($self->isDefined($term)) {
+      $new->{defined}{lc($term)} = $self->_definition($term);
       $new->{$new->{baselang}}{$term} = $self->{$self->{baselang}}{$term};
-    } else { ### $other->isdefined($term)
-      $new->{defined}{lc($term)} = $other->definition($term);
+    } else { ### $other->isDefined($term)
+      $new->{defined}{lc($term)} = $other->_definition($term);
       $new->{$new->{baselang}}{$term} = $other->{$other->{baselang}}{$term};
     }
   }
@@ -332,7 +336,7 @@ sub top {
 ###
 #
 #
-sub default_descriptions {
+sub _default_descriptions {
   return {
 	  'RT'  => q/Related term/,
 	  'TT'  => q/Top term/,
@@ -344,7 +348,7 @@ sub default_descriptions {
 	 };
 }
 
-sub setExternal {
+sub _setExternal {
   my ($self,@rels) = @_;
   for (@rels) {
     $self->{externals}{uc($_)} = 1;
@@ -352,7 +356,7 @@ sub setExternal {
   return $self;
 }
 
-sub isExternal {
+sub _isExternal {
   my ($self,$ext) = @_;
   return (defined($self->{externals}{uc($ext)}) &&
 	  defined($self->{externals}{uc($ext)}) == 1);
@@ -364,9 +368,9 @@ sub isExternal {
 sub thesaurusNew {
   my $obj = {
 	     # thesaurus => {},
-	     inverses => default_inversions(),
-	     descriptions => default_descriptions(),
-	     externals => default_norelations(),
+	     inverses     => _default_inversions(),
+	     descriptions => _default_descriptions(),
+	     externals    => _default_norelations(),
 	     name => '_top_',
 	     baselang => '?',
 	     languages => {},
@@ -401,7 +405,7 @@ sub thesaurusRetrieve {
 ###
 #
 #
-sub trurl {
+sub _trurl {
   my $t = shift;
   $t =~ s/\s/+/g;
   return $t;
@@ -415,7 +419,7 @@ sub getHTMLTop {
   my $script = shift || $ENV{SCRIPT_NAME};
   my $t = "<ul>";
   $t.=join("\n",
-	   map { "<li><a href=\"$script?t=" .trurl($_). "\">$_</a></li>" }
+	   map { "<li><a href=\"$script?t=" ._trurl($_). "\">$_</a></li>" }
 	   @{$self->{$self->{baselang}}->{$self->{name}}->{NT}});
   $t .= "</ul>";
   return $t;
@@ -429,9 +433,9 @@ sub thesaurusLoad {
   my %thesaurus;
 
   unless($self){
-    $self->{inverses}     = default_inversions();
-    $self->{descriptions} = default_descriptions();
-    $self->{externals}    = default_norelations();
+    $self->{inverses}     = _default_inversions();
+    $self->{descriptions} = _default_descriptions();
+    $self->{externals}    = _default_norelations();
     $self->{name}         = "_top_";
     $self->{baselang}     = "?";
     $self->{languages}    = {};
@@ -523,7 +527,7 @@ sub thesaurusLoad {
 
     # Let's see if the term is commented...
     unless ($term =~ /^#/) {
-      $term = term_normalize($term);
+      $term = _term_normalize($term);
       $thesaurus{$term}{_NAME_} = $term;
       $self->{defined}{lc($term)} = $term;
 
@@ -548,13 +552,13 @@ sub thesaurusLoad {
 	    ## $thesaurus{$term}{$class}.= ($1?"$3":" $3");
 	    $thesaurus{$term}{$class}.= ($thesaurus{$term}{$class}?" $3":"$3");
 	  } elsif (defined($self->{languages}{$class})) {
-	    # $translations->{$class}->{term_normalize($3)}.=$term;
+	    # $translations->{$class}->{_term_normalize($3)}.=$term;
 	    $self->{$class}{$3}.=$term;
-	    $self->{defined}{term_normalize(lc($3))} = $term;
+	    $self->{defined}{_term_normalize(lc($3))} = $term;
 	    $thesaurus{$term}{$class} = $3;
 	  } else {
 	    push(@{$thesaurus{$term}{$class}}, map {
-	      term_normalize($_)
+	      _term_normalize($_)
 	    } split(/\s*,\s*/, $3));
 	  }
 	}
@@ -592,12 +596,12 @@ sub _treatMetas1 {
 
  if(@ts=$t->terms("_order_","NT"))   { $t->order(@ts); 
           @r{@ts,"_order_"}=(@ts,1) }
- if(@ts=$t->terms("_external_","NT")){ $t->setExternal(@ts); 
+ if(@ts=$t->terms("_external_","NT")){ $t->_setExternal(@ts);
           @r{@ts,"_external_"}=(@ts,1) }
- if(@ts=$t->terms("_top_","NT"))     { $t->top_name($ts[0]);
+ if(@ts=$t->terms("_top_","NT"))     { $t->topName($ts[0]);
           $r{"_top_"}=1 }
- if(@ts=$t->terms("_baselang_","NT")){ $t->baselang($ts[0]);
-          @r{@ts,"_baselang_"}=(@ts,1) }
+ if(@ts=$t->terms("baselang_","NT")){ $t->baselang($ts[0]);
+          @r{@ts,"baselang_"}=(@ts,1) }
  if(@ts=$t->terms("_language_","NT")){ $t->languages(@ts); 
           @r{@ts,"_language_"}=(@ts,1) }
  if(@ts=$t->terms("_symmetric_","NT")){ for(@ts){ $t->addInverse($_,$_);}
@@ -609,9 +613,9 @@ sub _treatMetas1 {
    $t->downtr(
      { SN        => sub{ $t->describe({rel => $term, desc=>$terms[0]}) }, ## FALTA A LINGUA
        INV       => sub{ $t->addInverse($term,$terms[0])},
-       RANG      => sub{ $t->setExternal($term)},
+       RANG      => sub{ $t->_setExternal($term)},
        -order    => ["SN","INV"],
-       -eachTerm => sub{ $r{$term}=$term },  
+       -eachTerm => sub{ $r{$term}=$term },
      }, @ts);
  }
  ($t,[(keys %r)]);
@@ -784,7 +788,7 @@ sub navigate {
     $term = $obj->getdefinition($param{$topic});
   } else {
     $show_title = 0 if exists($conf->{title}) && $conf->{title} eq "no";
-    if ($obj->isdefined($obj->{name})) {
+    if ($obj->isDefined($obj->{name})) {
       $term = $obj->{defined}{lc($obj->{name})};
     } else {
       $term = '_top_';
@@ -794,10 +798,10 @@ sub navigate {
   my (@terms,$html);
 
   # If we don't have the term, return only the title
-  return h2($term) unless ($obj->isdefined($term));
+  return h2($term) unless ($obj->isDefined($term));
 
   # Make the page title
-  $html = h2(capitalize($capitalize, $obj->translateTerm($term,$language))) if $show_title;
+  $html = h2(capitalize($capitalize, $obj->_translateTerm($term,$language))) if $show_title;
 
   # Get the external relations
   my %norel = %{$obj->{externals}};
@@ -842,7 +846,7 @@ sub navigate {
 	my $term = $_;
 	my $link = $term;
 	$link =~ s/\s/+/g;
-	$term = $obj->translateTerm($term, $language);
+	$term = $obj->_translateTerm($term, $language);
 	a({ href=>"$script?$topic=$link"},$term)
       } sort {lc($a)cmp lc($b)} @{$obj->{$obj->{baselang}}{$term}{$rel}});
 
@@ -856,7 +860,7 @@ sub navigate {
     if (exists($obj->{$obj->{baselang}}{$term}{$rel})) {
       @terms = sort {lc($a)cmp lc($b)} @{$obj->{$obj->{baselang}}{$term}{$rel}};
       $html.= ul(li([map {
-	thesaurusGetHTMLTerm($_, $obj, $script, $language,
+	_thesaurusGetHTMLTerm($_, $obj, $script, $language,
 			     $second_level_limit, $hide_on_second_level);
       } @terms])) if (@terms);
     }
@@ -928,7 +932,7 @@ sub dumpHTML {
   my %thesaurus = %{$obj->{$obj->{baselang}}};
   my $t = "";
   for (keys %thesaurus) {
-    $t.=thesaurusGetHTMLTerm($_,$obj);
+    $t.=_thesaurusGetHTMLTerm($_,$obj);
   }
   return $t;
 }
@@ -946,7 +950,7 @@ sub relations {
 ###
 #
 # Given a term, return it's information (second level for navigate)
-sub thesaurusGetHTMLTerm {
+sub _thesaurusGetHTMLTerm {
   my ($term,$obj,$script,$language,$limit,$hide) = @_;
 
   my @rels2hide = map {uc} (defined($hide))?@$hide:();
@@ -958,13 +962,13 @@ sub thesaurusGetHTMLTerm {
   my %descs = %{$obj->{descriptions}};
 
   # Check if the term exists in the thesaurus
-  if ($obj->isdefined($term)) {
+  if ($obj->isDefined($term)) {
     $term = $obj->{defined}{lc($term)};
     my ($c,$t,$tterm);
     my $link = $term;
 
     $link =~ s/\s/+/g;
-    $tterm = $obj->translateTerm($term,$language);
+    $tterm = $obj->_translateTerm($term,$language);
     $t = b(a({href=>"$script?t=$link"},$tterm)). br . "<small><dl><dd>\n";
 
     for $c (sort keys %{$thesaurus{$term}}) {
@@ -1001,7 +1005,7 @@ sub thesaurusGetHTMLTerm {
  			 if ($link eq "...") {
  			   $link
  			 } else {
- 			   $_ = $obj->translateTerm($_,$language) || $_;
+ 			   $_ = $obj->_translateTerm($_,$language) || $_;
  			   $link =~s/\s/+/g;
  			   a({href=>"$script?t=$link"},$_)
  			 }
@@ -1018,11 +1022,12 @@ sub thesaurusGetHTMLTerm {
   }
 }
 
-sub getdefinition {
+sub getdefinition { getDefinition(@_) }
+sub getDefinition {
   my $self = shift;
-  my $term = term_normalize(lc(shift));
-  if ($self->isdefined($term)) {
-  	return $self->{defined}{$term}; 
+  my $term = _term_normalize(lc(shift));
+  if ($self->isDefined($term)) {
+  	return $self->{defined}{$term};
   } else {
 	return $term;
   }
@@ -1031,18 +1036,18 @@ sub getdefinition {
 ###
 #
 #
-sub isdefined {
+sub isDefined {
   my $obj = shift;
-  my $term = term_normalize(lc(shift));
+  my $term = _term_normalize(lc(shift));
   return defined($obj->{defined}{$term});
 }
 
 ###
 #
 #
-sub definition {
+sub _definition {
   my ($self,$term) = @_;
-  return $self->{defined}{term_normalize(lc($term))};
+  return $self->{defined}{_term_normalize(lc($term))};
 }
 
 ###
@@ -1069,8 +1074,8 @@ sub complete {
 	if (defined($inverses{$classe})) {
 	  # completar cada um dos termos relacionados
 	  for (@{$thesaurus->{$termo}{$classe}}) {
-	  # %thesaurus = completa($obj,$_,$inverses{$classe},$termo,%thesaurus);
-	    completa($obj,$_,$inverses{$classe},$termo,$thesaurus);
+	    # %thesaurus = _completa($obj,$_,$inverses{$classe},$termo,%thesaurus);
+	    _completa($obj,$_,$inverses{$classe},$termo,$thesaurus);
 	  }
 	}
       }
@@ -1085,13 +1090,13 @@ sub complete {
 ###
 #
 #
-sub completa {
+sub _completa {
   ## Yeah, obj and thesaurus can be redundanct, but it's better this way...
   my ($obj,$palavra,$classe,$termo,$thesaurus) = @_;
   my $t;
 
   # Ver se existe a palavra e a classe no thesaurus
-  if ($obj->isdefined($palavra)) {
+  if ($obj->isDefined($palavra)) {
     $t = $obj->{defined}{lc($palavra)};
     if (defined($thesaurus->{$t}{$classe})) {
       # se existe, o array palavras fica com os termos (para ver se ja' existe)
@@ -1118,7 +1123,7 @@ sub completa {
 #
 sub addTerm {
   my $obj = shift;
-  my $term = term_normalize(shift);
+  my $term = _term_normalize(shift);
 
   $obj->{$obj->{baselang}}{$term}{_NAME_} = $term;
   $obj->{defined}{lc($term)} = $term;
@@ -1135,15 +1140,15 @@ sub addRelation {
   $obj->{descriptions}{$rel} = "..." 
     unless defined($obj->{descriptions}{$rel});
 
-  unless ($obj->isdefined($term)) {
-    $obj->{defined}{lc(term_normalize($term))} = term_normalize($term);
+  unless ($obj->isDefined($term)) {
+    $obj->{defined}{lc(_term_normalize($term))} = _term_normalize($term);
   }
-  $term = $obj->definition($term);
+  $term = $obj->_definition($term);
   if (exists($obj->{externals}{$rel})) {
 	$obj->{$obj->{baselang}}{$term}{$rel} = $terms[0];
   } else {
   	push @{$obj->{$obj->{baselang}}{$term}{$rel}},
-    		map {term_normalize($_)} @terms;
+    		map {_term_normalize($_)} @terms;
   }
 
 }
@@ -1153,9 +1158,9 @@ sub addRelation {
 #
 sub deleteTerm {
   my $obj = shift;
-  my $term = term_normalize(shift);
+  my $term = _term_normalize(shift);
   my $t2=$term;
-  $term = $obj->definition($term);
+  $term = $obj->_definition($term);
   my ($t,$c);
 
   warn("'$t2' => '$term'\n") && return unless defined($term);
@@ -1257,19 +1262,19 @@ sub downtr {
 #
 sub tc{
   # @_ == ($self,$term,@relations)
-  my %x = tc_aux(@_);
+  my %x = _tc_aux(@_);
   return (keys %x);
 }
 
 ###
 #
 #
-sub tc_aux {
+sub _tc_aux {
   my ($self,$term,@relat) = @_;
   $term = $self->getdefinition($term);
   my %r = ( $term => 1 );
   for ($self->terms($term,@relat)) {
-    %r = (%r, $_ => 1,  tc_aux($self,$_,@relat)) unless $r{$_};
+    %r = (%r, $_ => 1,  _tc_aux($self,$_,@relat)) unless $r{$_};
   }
   return %r;
 }
@@ -1277,7 +1282,7 @@ sub tc_aux {
 ###
 #
 #
-sub term_normalize {
+sub _term_normalize {
   my $t = shift;
   $t =~ s/^\s*(.*?)\s*$/$1/;
   $t =~ s/\s\s+/ /g;
@@ -1294,7 +1299,7 @@ sub capitalize {
 }
 
 # remove duplicados de uma lista
-sub set_of {
+sub _set_of {
   my %set = ();
   $set{$_} = 1 for @_;
   return keys %set;
@@ -1323,6 +1328,8 @@ Biblio::Thesaurus - Perl extension for managing ISO thesaurus
   $obj->addRelation('term','relation','term1',...,'termn');
   $obj->deleteTerm('term');
 
+  $obj->isDefined('term');
+
   $obj->describe( { rel='NT', desc="Narrow Term", lang=>"UK" } );
 
   $obj->addInverse('Relation1','Relation2');
@@ -1336,8 +1343,8 @@ Biblio::Thesaurus - Perl extension for managing ISO thesaurus
   $obj->baselang('l');
   $lang = $obj->baselang();
 
-  $obj->top_name('term');
-  $term = $obj->top_name();
+  $obj->topName('term');
+  $term = $obj->topName();
 
   $html = $obj->navigate(+{configuration},%parameters);
 
@@ -1598,6 +1605,25 @@ earlier sections. It returns the object with the contents of the
 file. If the file does not defined relations and descriptions about
 the ISO classes, they are added.
 
+=head2 thesaurusMultiLoad
+
+You can join different thesaurus ISO files using this function:
+
+  $obj = thesaurusMultiLoad('iso-file1','iso-file2',...);
+
+=head2 appendThesaurus
+
+You can also append a thesaurus ISO (or another thesaurus object) to a
+loaded thesaurus. For that, use one of:
+
+  $obj->appendThesaurus("iso-file");
+  $obj->appendThesaurus( $other_thesaurus_object );
+
+=head2 thesaurusLoadM
+
+This method is used to load a thesaurus on the meta-thesaurus
+format. This is still under development.
+
 =head2 thesaurusRetrieve
 
 Everybody knows that text access and parsing of files is not
@@ -1628,6 +1654,24 @@ You can add terms definitions using the perl API. This method adds a
 term on the thesaurus. Note that if that term already exists, all it's
 relations will be deleted.
 
+=head2 all_terms
+
+Returns an array with all terms for the thesaurus base language.
+NOTE: this function is deprecated. Use allTerms instead.
+
+=head2 allTerms
+
+Returns an array with all terms for the thesaurus base language.
+
+=head2 topName
+
+Returns the term in the top of the thesaurus, or defined a new one if
+called with an argument.
+
+=head2 top_name
+
+Deprectated. See C<<topName>>;
+
 =head2 addRelation
 
 To add relations to a term, use this method. It can be called again
@@ -1651,12 +1695,42 @@ You can use this method to describe some relation class. You can use
 it to change the description of an existing class (like the ISO ones)
 or to define a new class.
 
+=head2 isDefined
+
+Use this method to check if a term exists in the thesaurus.
+
+=head2 getdefinition
+
+Deprectaed. Use C<<getDefinition>
+
+=head2 getDefinition
+
+Returns the definition for a term. The definition is a feature
+structure containing the term information.
+
+=head2 getDescription
+
+Given a relation name and a language (or the default will be used), it
+returns the description for that relation.
+
+=head2 relations
+
+Call this method with a term, and it returns a list of the relations
+defined for that term.
+
+
 =head2 addInverse
 
 This method should be used to describe the inversion property to
 relation classes. Note that if there is some previous property about
 any of the relations, it will de deleted. If any of the relations does
 not exist, it will be added.
+
+=head2 order
+
+With this method you can define (and access) the order of
+classes. This order is used whenever you call a dump function, or the
+navigation CGI.
 
 =head2 navigate
 
@@ -1733,12 +1807,28 @@ the name of the topic CGI parameter (default: "t")
 
 =back
 
+
+=head2 dumpHTML
+
+This method returns a big string containing all the thesaurus in
+HTML. It is mainly used for debug.
+
+=head2 getHTMLTop
+
+This method returns the HTML needed for the top level of the browsing
+thesaurus. It can be useful when putting a top level on the first page
+of a portal.
+
 =head2 complete
 
 This function completes the thesaurus based on the invertibility
 properties. This operation is only needed when adding terms and
 relations by this API. Whenever the system loads a thesaurus ISO file,
 it is completed.
+
+=head2 baselang
+
+Use this method to retrieve the base language of the thesaurus.
 
 =head2 downtr
 

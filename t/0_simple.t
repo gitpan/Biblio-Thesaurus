@@ -32,7 +32,7 @@ ok($thesaurus->{EN}{cat},"gato");
 ok($thesaurus->getdefinition("cat"),"gato");
 
 # Check definition type comparison
-ok($thesaurus->isdefined('GaTo'));
+ok($thesaurus->isDefined('GaTo'));
 
 
 $thesaurus = thesaurusLoad('examples/thesaurus.portuguese');
@@ -43,8 +43,8 @@ my $true2 = 1;
 my $term;
 
 while($term = shift @defineds) {
-  $true = 0 unless $thesaurus->isdefined($term);
-  $true2 = 0 unless $thesaurus->isdefined($thesaurus->definition($term));
+  $true = 0 unless $thesaurus->isDefined($term);
+  $true2 = 0 unless $thesaurus->isDefined($thesaurus->_definition($term));
 }
 ok($true);
 ok($true2);

@@ -38,6 +38,6 @@ unlink("/tmp/_${$}_");
 
 for $i (0..$NT) {
   ok(1) if !($i%$INT);
-  last unless $the -> isdefined("termo[${i}]");
+  last unless $the -> isDefined("termo[${i}]");
 
 }
