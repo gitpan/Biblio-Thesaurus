@@ -26,15 +26,15 @@ for $i (0..$NT) {
 
 }
 
-$t->storeOn("/tmp/_${$}_");
+$t->storeOn("_${$}_");
 ok(1);
 
 undef($t); ### THis frees the memory??
 
-my $the = thesaurusRetrieve("/tmp/_${$}_");
+my $the = thesaurusRetrieve("_${$}_");
 ok(1);
 
-unlink("/tmp/_${$}_");
+unlink("_${$}_");
 
 for $i (0..$NT) {
   ok(1) if !($i%$INT);
