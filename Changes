@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.24 Thu Mar 24 21:48:00 2005
+	- Added some information missing on the POD;
+	- New README file;
+
 0.23 Wed Nov 10 10:44:00 2004
 	- Corrected bug dumping ISO thesaurus with external
 	  relationships;

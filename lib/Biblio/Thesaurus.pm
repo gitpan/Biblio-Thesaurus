@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 ##
 #
@@ -534,6 +534,8 @@ sub thesaurusLoad {
     # Let's see if the term is commented...
     unless ($term =~ /^#/) {
       $term = _term_normalize($term);
+
+      $term = $self->{defined}{lc($term)} if ($self->{defined}{lc($term)});
       $thesaurus{$term}{_NAME_} = $term;
       $self->{defined}{lc($term)} = $term;
 
@@ -766,7 +768,7 @@ sub navigate {
   # The first element is the object reference
   my $obj = shift;
   # This is the script name
-  my $script = $ENV{SCRIPT_NAME};
+  my $script = $ENV{SCRIPT_NAME} || "";
 
   # Get the configuration hash
   my $conf = {};
@@ -832,7 +834,7 @@ sub navigate {
       my $desc = $obj->getDescription($rel, $language);
       $html .= b($desc) unless $desc eq "...";
 
-      $html.= $obj->{$obj->{baselang}}{$term}{$rel}.br;
+      $html.= " $obj->{$obj->{baselang}}{$term}{$rel}".br;
     } elsif (exists($obj->{languages}{$rel})) {
       ## This empty block is used for languages translations
 
@@ -881,19 +883,19 @@ sub toTex{
   my $self = shift;
   my $_corres = shift || {};
   my $mydt = shift || {};
-  my $a;
+#  my $a;
 
   my %descs = %{$self->{descriptions}};
 
   my $procgr= sub {
-      my $r=""; my $a;
-      my $ki =  $_corres->{$rel}->[0] || 
-                  (defined $descs{$rel} 
-                   ? "\\\\\\emph{$descs{$rel}} -- " 
-                   : "\\\\\\emph{".ucfirst(lc($rel))."} -- " 
-                  );
+      my $r="";# my $a;
+      my $auxrel = $descs{$rel} || $rel;
+      $auxrel =~ s/_/ /g;
+      $auxrel = ucfirst(lc($auxrel));
+      my $ki =  $_corres->{$rel}->[0] || "\\\\\\emph{$auxrel} -- " ;
       my $kf = $_corres->{$rel}->[1] || "\n";
-      $r = "\\item[$ki]" . join(' $\diamondsuit$ ',@terms) if @terms;
+      $r = "\\item[$ki]" . 
+           join(' $\diamondsuit$ ',(sort {lc($a) cmp lc($b)} @terms)) if @terms;
       };
 
  $self->downtr(
@@ -990,7 +992,7 @@ sub _thesaurusGetHTMLTerm {
           $t.= "<div>$thesaurus{$term}{$c}</div>";
         } else {
 	  $t .= b($desc);
- 	  $t.= "$thesaurus{$term}{$c}".br;
+ 	  $t.= " $thesaurus{$term}{$c}".br;
 	}
       } elsif (exists($obj->{languages}{$c})) {
  	# Jump the language relations
@@ -1367,6 +1369,13 @@ Biblio::Thesaurus - Perl extension for managing ISO thesaurus
 
   $latex = $obj->toTex( ...)
   $xml   = $obj->toXml( ...)
+
+=head1 ABSTRACT
+
+This module provides transparent methods to maintain Thesaurus files.
+The module uses a subset from ISO 2788 which defines some standard
+features to be found on thesaurus files. The module also supports
+multilingual thesaurus and some extensions to the ISOs standard.
 
 =head1 DESCRIPTION
 
@@ -1920,7 +1929,7 @@ to tune some transformations details...
 
   print $thesaurus->toXml();
 
-=head1 AUTHORS
+=head1 AUTHOR
 
 Alberto Simoes, <albie@alfarrabio.di.uminho.pt>
 
@@ -1931,8 +1940,14 @@ Sara Correia,  <sara.correia@portugalmail.com>
 This module is included in the Natura project. You can visit it at
 http://natura.di.uminho.pt, and access the CVS tree.
 
-=head1 SEE ALSO
+=head1 COPYRIGHT & LICENSE
 
+Copyright 2000-2005 Natura Project, All Rights Reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=head1 SEE ALSO
 
 The example thesaurus file (C<examples/thesaurus>),
 

@@ -1,18 +1,31 @@
+ Biblio::Thesaurus version 0.24
+================================
 
-   Biblio::Thesaurus
- =====================
+Perl extension for managing ISO thesaurus
 
-  This is a module to process a slighty augmented ISO Thesaurus. It
-contains a certain number of commands to add more functionality and
-information over the Thesaurus.
 
-  Is supports ISO2788 thesaurus and Multilingual Thesaurus.
+ABSTRACT
 
-   Authors
- ===========
+This module provides transparent methods to maintain Thesaurus files.
+The module uses a subset from ISO 2788 which defines some standard
+features to be found on thesaurus files. The module also supports
+multilingual thesaurus and some extensions to the ISOs standard.
 
-    Alberto M. Simões   (albie@alfarrabio.di.uminho.pt)
-    José João Almeida   (jj@di.uminho.pt)
-    Sara A.G. Correia
 
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+COPYRIGHT AND LICENSE
+
+Copyright 2000-2005 Natura Project, All Rights Reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
