@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 ##
 #
@@ -72,7 +72,11 @@ sub terms {
   $term = $self->_definition($term);
   return (map {
     if (defined($self->{$base}{$term}{$_})) {
-      @{$self->{$base}{$term}{$_}}
+      if (ref($self->{$base}{$term}{$_}) eq "ARRAY") {
+	@{$self->{$base}{$term}{$_}}
+      } else {
+	($self->{$base}{$term}{$_})
+      }
     } else {
       ()
     }
@@ -263,7 +267,9 @@ sub appendThesaurus {
 
 	} elsif ($new->{externals}{$class}) {
 
-	  $new->{$new->{baselang}}{$def}{$class} = "?";
+	  $new->{$new->{baselang}}{$def}{$class} =
+	    $self->{$new->{baselang}}{$def}{$class} ||
+	    $other->{$new->{baselang}}{$def}{$class};
 
 	} elsif ($new->{languages}{$class}) {
 
