@@ -1,10 +1,13 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
-0.15 Fri Nov 15 08:59:59 2002
+0.16 ...
+	- Use references
+
+0.15 Fri Sep 15 02:03:04 2002
+	- Renamed to Biblio-Thesaurus
 	- More options to navigate method (level1hide)
 	- Ignore repeated terms;
 	- Removed Library::MLang dependency;
-        - Renamed, again, to Biblio::Thesaurus;
 
 0.14 Sat May 31 08:09:10 2002
 	- Added more options to navigate method (level2hide,

@@ -8,6 +8,12 @@ information over the Thesaurus.
 
   Is supports ISO2788 thesaurus and Multilingual Thesaurus.
 
+   Requirement
+ ===============
+
+  Library::MLang 0.04 -- module for multi-lingue interface
+
+
    Authors
  ===========
 

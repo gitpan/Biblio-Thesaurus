@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 ##
 #
@@ -550,8 +550,6 @@ sub thesaurusLoad {
   $self->{$self->{baselang}} = \%thesaurus;
   $self->{languages}{$self->{baselang}} = 1;
 
-   
-
   # bless and return the thesaurus! Amen!
   return complete(bless($self));
 }
@@ -750,6 +748,7 @@ sub navigate {
   my $hide_on_first_level = $conf->{level1hide} || [];
   my $hide_on_second_level = $conf->{level2hide} || \@tmp;
   my $capitalize = $conf->{capitalize} || 0;
+  my $topic = $conf->{topic_name} || "t";
 
   my %hide;
   @hide{@$hide_on_first_level} = @$hide_on_first_level;
@@ -759,9 +758,9 @@ sub navigate {
 
   my $term;
   my $show_title = 1;
-  if (exists($param{t})) {
-    $param{t} =~ s/\+/ /g;
-    $term = $obj->getdefinition($param{t});
+  if (exists($param{$topic})) {
+    $param{$topic} =~ s/\+/ /g;
+    $term = $obj->getdefinition($param{$topic});
   } else {
     $show_title = 0 if exists($conf->{title}) && $conf->{title} eq "no";
     if ($obj->isdefined($obj->{name})) {
@@ -823,7 +822,7 @@ sub navigate {
 	my $link = $term;
 	$link =~ s/\s/+/g;
 	$term = $obj->translateTerm($term, $language);
-	a({ href=>"$script?t=$link"},$term)
+	a({ href=>"$script?$topic=$link"},$term)
       } @{$obj->{$obj->{baselang}}{$term}{$rel}});
 
       $html.= br;
@@ -1030,33 +1029,34 @@ sub definition {
 #
 sub complete {
   my $obj = shift;
-  my %thesaurus = %{$obj->{$obj->{baselang}}};
+  my $thesaurus = $obj->{$obj->{baselang}};
   my %inverses = %{$obj->{inverses}};
   my ($termo,$classe);
 
   # para cada termo
-  for $termo (keys %thesaurus) {
+  for $termo (keys %$thesaurus) {
     # $obj->{defined}{lc($termo)} = $termo;
     # e para cada classe,
-    for $classe (keys %{$thesaurus{$termo}}) {
+    for $classe (keys %{$thesaurus->{$termo}}) {
       # verificar se existem duplicados...
-      if (ref($thesaurus{$termo}{$classe}) eq "ARRAY") {
+      if (ref($thesaurus->{$termo}{$classe}) eq "ARRAY") {
 	my %h;
-	@h{@{$thesaurus{$termo}{$classe}}} = @{$thesaurus{$termo}{$classe}};
-	$thesaurus{$termo}{$classe} = [ keys %h ];
+	@h{@{$thesaurus->{$termo}{$classe}}} = @{$thesaurus->{$termo}{$classe}};
+	$thesaurus->{$termo}{$classe} = [ keys %h ];
 
 	# se tiver inverso,
 	if (defined($inverses{$classe})) {
 	  # completar cada um dos termos relacionados
-	  for (@{$thesaurus{$termo}{$classe}}) {
-	    %thesaurus = completa($obj,$_,$inverses{$classe},$termo,%thesaurus);
+	  for (@{$thesaurus->{$termo}{$classe}}) {
+	  # %thesaurus = completa($obj,$_,$inverses{$classe},$termo,%thesaurus);
+	    completa($obj,$_,$inverses{$classe},$termo,$thesaurus);
 	  }
 	}
       }
     }
   }
 
-  $obj -> {$obj->{baselang}} = \%thesaurus;
+  $obj -> {$obj->{baselang}} = $thesaurus;
 
   return $obj;
 }
@@ -1066,30 +1066,30 @@ sub complete {
 #
 sub completa {
   ## Yeah, obj and thesaurus can be redundanct, but it's better this way...
-  my ($obj,$palavra,$classe,$termo,%thesaurus) = @_;
+  my ($obj,$palavra,$classe,$termo,$thesaurus) = @_;
   my $t;
 
   # Ver se existe a palavra e a classe no thesaurus
   if ($obj->isdefined($palavra)) {
     $t = $obj->{defined}{lc($palavra)};
-    if (defined($thesaurus{$t}{$classe})) {
+    if (defined($thesaurus->{$t}{$classe})) {
       # se existe, o array palavras fica com os termos (para ver se ja' existe)
-      my @palavras = @{$thesaurus{$t}{$classe}};
+      my @palavras = @{$thesaurus->{$t}{$classe}};
       # ver se ja' existe
       for (@palavras) {
-	return %thesaurus if (lc eq lc($termo));
+	return $thesaurus if (lc eq lc($termo));
       }
     }
     # nao existe: aumentar
-    push @{$thesaurus{$t}{$classe}}, $obj->{defined}{lc($termo)};
+    push @{$thesaurus->{$t}{$classe}}, $obj->{defined}{lc($termo)};
   } else {
     # nao existe: aumentar
-    $thesaurus{$palavra}{_NAME_} = $palavra unless
-      defined($thesaurus{$palavra}) && defined($thesaurus{$palavra}{_NAME_});
+    $thesaurus->{$palavra}{_NAME_} = $palavra unless
+      defined($thesaurus->{$palavra}) && defined($thesaurus->{$palavra}{_NAME_});
     $obj->{defined}{lc($palavra)} = $palavra;
-    push @{$thesaurus{$palavra}{$classe}}, $obj->{defined}{lc($termo)};
+    push @{$thesaurus->{$palavra}{$classe}}, $obj->{defined}{lc($termo)};
   }
-  return %thesaurus;
+  return $thesaurus;
 }
 
 ###
@@ -1697,6 +1697,10 @@ Defaults to 0 (all terms).
 
 a reference to a list of relations to do not show on the second
 level. Defaults to the empty list.
+
+=item topic_name
+
+the name of the topic CGI parameter (default: "t")
 
 =back
 

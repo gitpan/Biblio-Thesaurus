@@ -16,12 +16,6 @@ or convert it to HTML:
 
 Installation instructions:
 
- perl Makefile.PL
- make
- make test
- make install
-
-
 =head1 Needed Modules
 
 To use this module you need:
@@ -33,7 +27,7 @@ Storable 1.0006 or newer (look at your nearest CPAN)
 
 =back
 
-=head1 Procediment
+=head1 Process
 
 After the modules installation, do:
 
