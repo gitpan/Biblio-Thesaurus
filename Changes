@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.21 Mon Oct 25 21:42:00 2004
+	- Moved Thesaurus.pm to lib/Biblio/Thesaurus.pm
+	- Added some forgoten examples;
+
 0.20 Mon Oct 25 21:29:00 2004
 	- Added tests for thesaurus union;
 	- Corrected bug on thesaurus union;
