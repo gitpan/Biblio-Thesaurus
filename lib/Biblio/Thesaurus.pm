@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 ##
 #
@@ -746,7 +746,7 @@ sub save {
       next if $class eq "_NAME_";
       if(defined $obj->{externals}{$class} ||
 	 defined $obj->{languages}{$class}) {
-	$t.= " $class\t$thesaurus{$term}->{$class}\n";
+	$t.= "$class\t$thesaurus{$term}->{$class}\n";
       } else {
 	$t.= "$class\t" . join(", ", @{$thesaurus{$term}->{$class}}) . "\n";
       }

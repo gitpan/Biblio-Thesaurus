@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.23 Wed Nov 10 10:44:00 2004
+	- Corrected bug dumping ISO thesaurus with external
+	  relationships;
+
 0.22 Sat Nov 06 16:54:00 2004
 	- Corrected a test to run under Windows
 
