@@ -1,6 +1,6 @@
 package Biblio::Thesaurus;
 
-require 5.6.0;
+require 5.006;
 use strict;
 use warnings;
 require Exporter;
@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 ##
 #
@@ -176,10 +176,13 @@ sub append {
   # Check if baselang is the same, or if some of them is undefined
   if ($self->{baselang} eq $other->{baselang}) {
     $new->{baselang} = $self->{baselang}
+
   } elsif ($self->{baselang} eq "?") {
     $new->{baselang} = $other->{baselang}
+
   } elsif ($other->{baselang} eq "?") {
     $new->{baselang} = $self->{baselang}
+
   } else {
     return undef;
   }
@@ -188,10 +191,13 @@ sub append {
   # there are two different tops, use the first ($self) one
   if ($other->{name} eq $self->{name}) {
     $new->{name} = $self->{name}
+
   } elsif ($other->{name} eq "_top_") {
     $new->{name} = $self->{name}
+
   } elsif ($self->{name} eq "_top_") {
     $new->{name} = $other->{name}
+
   } else {
     $new->{name} = $self->{name}
   }
@@ -200,6 +206,7 @@ sub append {
   $new->{version} = $VERSION;
 
   sub ffjoin {
+    # key, hash1ref, hash2ref
     my ($c,$a,$b) = @_;
     if (exists($a->{$c}) && exists($b->{$c})) {
       return {%{$a->{$c}},%{$b->{$c}}};
@@ -223,29 +230,32 @@ sub append {
 
   # Languages: union
   $new->{languages} = ffjoin("languages",$self,$other);
-  delete($new->{languages}{"?"}) if ($new->{baselang} ne "?");
-
+  # delete($new->{languages}{"?"}) if ($new->{baselang} ne "?");
 
   # Get terms for the new thesaurus
-  my %terms;
-  @terms{(keys  %{$self->{ $self->{baselang}}},
-	  keys %{$other->{$other->{baselang}}})} = 1;
+  my @terms = set_of(keys  %{$self->{ $self->{baselang}}},
+		     keys %{$other->{$other->{baselang}}});
 
-  for my $term (keys %terms) {
+  # Para cada termo do thesaurus...
+  for my $term (@terms) {
+
+    # existe em ambos...
     if ($self->isdefined($term) && $other->isdefined($term)) {
-      my ($a_def,$b_def) = ($self->definition($term), $other->definition($term));
+      my ($a_def,$b_def) = ($self->definition($term),
+                            $other->definition($term));
       my $def = $a_def;
 
       $new->{defined}{lc($def)} = $def;
 
-      my %class;
-      @class{(keys %{$self->{$self->{baselang}}{$a_def}},
-	      keys %{$other->{$other->{baselang}}{$b_def}})}=1;
+      my @class = set_of(keys %{$self->{$self->{baselang}}{$a_def}},
+			 keys %{$other->{$other->{baselang}}{$b_def}});
 
-      for my $class (keys %class) {
+      # para cada uma das suas relações...
+      for my $class (@class) {
 	if ($class eq "_NAME_") {
 
-	  $new->{$new->{baselang}}{$def}{_NAME_}=$def;
+	  # optar pela forma do thesaurus A
+	  $new->{$new->{baselang}}{$def}{_NAME_} = $def;
 
 	} elsif ($new->{externals}{$class}) {
 
@@ -261,14 +271,18 @@ sub append {
 
 	    # Join lists
 	    my %there;
-	    @there{@{$self->{$self->{baselang}}{$a_def}{$class}}}=1;
+	    @there{@{$self->{$self->{baselang}}{$a_def}{$class}}}=1 x @{$self->{$self->{baselang}}{$a_def}{$class}};
+
 	    push @{$new->{$new->{baselang}}{$def}{$class}}, keys %there;
+
 	    for (@{$other->{$other->{baselang}}{$b_def}{$class}}) {
-	      push @{$new->{$new->{baselang}}{$def}{$class}}, $_ unless $there{$_};
+	      unless ($there{$_}) {
+		push @{$new->{$new->{baselang}}{$def}{$class}}, $_;
+	      }
 	      $there{$_} = 1;
 	    }
 
-	  } elsif (exits($self->{$self->{baselang}}{$a_def}{$class})) {
+	  } elsif (exists($self->{$self->{baselang}}{$a_def}{$class})) {
 	    $new->{$new->{baselang}}{$def} = $self->{$self->{baselang}}{$a_def}{$class};
 	  } else { ## other->b_def->class
 	    $new->{$new->{baselang}}{$def} = $other->{$other->{baselang}}{$b_def}{$class};
@@ -336,6 +350,12 @@ sub setExternal {
     $self->{externals}{uc($_)} = 1;
   }
   return $self;
+}
+
+sub isExternal {
+  my ($self,$ext) = @_;
+  return (defined($self->{externals}{uc($ext)}) &&
+	  defined($self->{externals}{uc($ext)}) == 1);
 }
 
 ###
@@ -525,7 +545,8 @@ sub thesaurusLoad {
 
 	  # divide the relation terms by comma unless it is a language or extern relation
 	  if ( defined($self->{externals}{$class}) ) {
-	    $thesaurus{$term}{$class}.= $3;
+	    ## $thesaurus{$term}{$class}.= ($1?"$3":" $3");
+	    $thesaurus{$term}{$class}.= ($thesaurus{$term}{$class}?" $3":"$3");
 	  } elsif (defined($self->{languages}{$class})) {
 	    # $translations->{$class}->{term_normalize($3)}.=$term;
 	    $self->{$class}{$3}.=$term;
@@ -715,7 +736,7 @@ sub save {
       next if $class eq "_NAME_";
       if(defined $obj->{externals}{$class} ||
 	 defined $obj->{languages}{$class}) {
-	$t.= "$class\t$thesaurus{$term}->{$class}\n";
+	$t.= " $class\t$thesaurus{$term}->{$class}\n";
       } else {
 	$t.= "$class\t" . join(", ", @{$thesaurus{$term}->{$class}}) . "\n";
       }
@@ -823,7 +844,7 @@ sub navigate {
 	$link =~ s/\s/+/g;
 	$term = $obj->translateTerm($term, $language);
 	a({ href=>"$script?$topic=$link"},$term)
-      } @{$obj->{$obj->{baselang}}{$term}{$rel}});
+      } sort {lc($a)cmp lc($b)} @{$obj->{$obj->{baselang}}{$term}{$rel}});
 
       $html.= br;
     }
@@ -833,7 +854,7 @@ sub navigate {
   for $rel (@{$expander}) {
     $rel = uc($rel);
     if (exists($obj->{$obj->{baselang}}{$term}{$rel})) {
-      @terms = @{$obj->{$obj->{baselang}}{$term}{$rel}};
+      @terms = sort {lc($a)cmp lc($b)} @{$obj->{$obj->{baselang}}{$term}{$rel}};
       $html.= ul(li([map {
 	thesaurusGetHTMLTerm($_, $obj, $script, $language,
 			     $second_level_limit, $hide_on_second_level);
@@ -970,7 +991,7 @@ sub thesaurusGetHTMLTerm {
 	} else {
 	  $t.= b($desc)." ";
 	}
-	my @termos = ( @{$thesaurus{$term}{$c}} );
+	my @termos = sort {lc($a)cmp lc($b)} ( @{$thesaurus{$term}{$c}} );
 	if (defined($limit) && $limit!=0 && @termos > $limit) {
  	  while(@termos > $limit) { pop @termos; }
  	  push @termos, "...";
@@ -1272,6 +1293,13 @@ sub capitalize {
   return $text;
 }
 
+# remove duplicados de uma lista
+sub set_of {
+  my %set = ();
+  $set{$_} = 1 for @_;
+  return keys %set;
+}
+
 1;
 __END__
 
@@ -1485,7 +1513,7 @@ the relation class description. To do this, you should use the C<description>
 command with the language in from of it:
 
   %desc[PT] SN Nota de Contexto
-  %description[PT] IOF Instância de
+  %description[PT] IOF Instancia de
 
 =item B<ext>ernals
 
@@ -1641,11 +1669,12 @@ The typical thesaurus navigation CGI is:
   #!/usr/bin/perl -w
 
   use CGI qw/:standard/;
+  use Biblio::Thesaurus;
 
   print header;
   for (param()) { $arg{$_} = param($_) }
   $thesaurus = thesaurusLoad("thesaurus_file");
-  $thesaurus->navigate(%arg);
+  print $thesaurus->navigate(%arg);
 
 This method can receive, as first argument, a reference to an
 associative array with some configuration variables like what
@@ -1783,7 +1812,7 @@ It uses downtr function to make the translation; a downtr handler can be given
 to tune some transformations details...
 
   print $thesaurus->toTex(
-         {EN=>["\\\\\\emph{Inglês} -- ",""]},
+         {EN=>["\\\\\\emph{Ingles} -- ",""]},
          {FR => sub{""}})
 
 =head2 toXml
@@ -1797,9 +1826,9 @@ to tune some transformations details...
 
 =head1 AUTHORS
 
-Alberto Simões, <albie@alfarrabio.di.uminho.pt>
+Alberto Simoes, <albie@alfarrabio.di.uminho.pt>
 
-José João Almeida, <jj@di.uminho.pt>
+José Joao Almeida, <jj@di.uminho.pt>
 
 Sara Correia,  <sara.correia@portugalmail.com>
 

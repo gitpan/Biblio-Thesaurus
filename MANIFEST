@@ -15,3 +15,4 @@ t/dup.the
 t/b.the
 t/1_join.t
 internals.pod
+META.yml                                 Module meta-data (added by MakeMaker)

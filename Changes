@@ -1,6 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
-0.16 ...
+0.17 Fri Oct 31 10:11:12 2003
+	- Bug fixes
+
+0.16 Somewhere in 2003
 	- Use references
 
 0.15 Fri Sep 15 02:03:04 2002
