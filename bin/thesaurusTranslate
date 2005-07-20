@@ -18,7 +18,8 @@ $the->downtr( {
 	       -default  => sub {
 		 if ($the->{languages}{$rel}) {   ### Is a language
 		   if ($rel eq "$langdest") {
-		     $termBody .= "$langorig $term\n"
+		     # $termBody .= "$langorig $term\n"
+		     ""
 		   } else {
 		     $termBody .= "$rel ".join(", ",@terms)."\n"
 		   }
@@ -48,12 +49,12 @@ $the->downtr( {
 		 if ($comment) {
 		   my $t;
 		   if ($t = missing_translation($tterm)) {
-		     print "\n# $t\n$termBody";
+		     print "\n# $t\n$langorig $term\n$termBody";
 		   } else {
-		     print "\n$tterm\n$termBody";
+		     print "\n$tterm\n$langorig $term\n$termBody";
 		   }
 		 } else {
-		   print "\n$tterm\n$termBody";
+		   print "\n$tterm\n$langorig $term\n$termBody";
 		 }
 		 $termBody = "";
 	       },

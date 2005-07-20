@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 
 ##
 #
@@ -1238,18 +1238,18 @@ sub downtr {
       } else {
         @terms = @{$self->{$self->{baselang}}{$t}{$rel}};
       }
-  
+
       #
       # Current term...
       #
       $term = $t;
-  
-      if (defined($handler->{$rel})) {
-      $r .=  &{$handler->{$rel}};
-      } elsif (defined($handler->{-default})) {
-      $r .=  &{$handler->{-default}};
+
+      if (exists($handler->{$rel})) {
+	$r .=  &{$handler->{$rel}};
+      } elsif (exists($handler->{-default})) {
+	$r .=  &{$handler->{-default}};
       } else  {
-      $r .=  "\n$rel\t".join(", ",@terms);
+	$r .=  "\n$rel\t".join(", ",@terms);
       }
     }
     for($r){

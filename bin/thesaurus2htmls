@@ -15,14 +15,19 @@ open (G,">$dir/0_lista_de_termos.html") or die("cant create index");
 print G $obj->downtr(
      {-default  => sub { 
           my $cla=(exists $obj->{languages}{$rel})?"lingua":"rel";
-          if(@terms > 1){
-             li({-class=>$cla},strong($obj->getDescription($rel)),"\t".
-               ul(li([map{ a({href=>t2f($_)},$_)."\n"} sort @terms])))."\n"}
-          else{
-             li({-class=>$cla},strong($obj->getDescription($rel)),"\t".
-               join(", ", map{ a({href=>t2f($_)},$_)."\n"} sort @terms))."\n"}
-          },
-      -order    => ["PT","FR",'SP','ES' , 'EN',"DE" ,"BT","NT","RT","MT","UF","USE","SN"],
+          if (@terms > 1) {
+	    li({-class => $cla},
+	       strong($obj->getDescription($rel)),"\t".
+	       ul(li([map{ a({href=>t2f($_)},$_)."\n"} sort @terms])))."\n";
+	  }
+          else {
+	    li({-class => $cla, '-lang' => $rel},
+	       strong($obj->getDescription($rel)),"\t".
+	       join(", ", map{ a({href=>t2f($_)},$_)."\n"} sort @terms))."\n";
+	  }
+	},
+      -order    => ["IOF","PT","EN","FR",'SP','ES',"DE","IT","DA","NL","SV","FI" 
+                  ,"BT","NT","RT","MT","UF","USE","SN"],
       -end      => sub { "Thesaurus<small>:\n $_ \nFIM\n"},
       -eachTerm => sub {
           my $tt=t2f($term);
@@ -41,8 +46,11 @@ close G;
 sub t2f{
  my $a = shift;
  ### for ($a){ tr/ביםףתאטלעשגךמפûהכןצüדץסח/aeiouaeiouaeiouaeiouaonc/; }
- for ($a){ tr/ביםףתאטלעשגךמפûהכןצüדץסח/AEIOUAEIOUAEIOUAEIOUAONC/;
-           s/[ \(\)\/\?\":]/_/g }
+ for ($a){ 
+           tr [A-Zֱֹֽ׃ÚֲÊװ] 
+              [a-zaeiouaeo] ;
+           tr/ביםףתאטלעשגךמפûהכןצüדץסח/AEIOUAEIOUAEIOUAEIOUAONC/;
+           s/[÷×\[\] \(\)\/\?\":]/_/g }
  "$a.html"
 }
 
