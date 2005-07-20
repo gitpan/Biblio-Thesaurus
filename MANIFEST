@@ -12,6 +12,7 @@ examples/thesaurus.portuguese
 bin/thesaurus2any
 bin/thesaurus2htmls
 bin/thesaurusTranslate
+bin/thesaurus2TMX
 INSTALL
 lib/Biblio/Thesaurus.pm
 Makefile.PL
@@ -26,3 +27,4 @@ t/b.the
 t/dup.the
 t/pod-coverage.t
 t/pod.t
+
