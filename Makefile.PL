@@ -1,8 +1,14 @@
 use ExtUtils::MakeMaker;
 
 my @scripts = ('bin/thesaurus2any',
+               'bin/thesaurus2biling',
+               'bin/thesaurusSC',
+               'bin/thesaurusV',
 	       'bin/thesaurus2htmls',
-	       'bin/thesaurusTranslate');
+	       'bin/tag2thesaurus',
+	       'bin/thesaurusTranslate',
+	       'bin/thesaurus2tex',
+               'bin/biling2thesaurus');
 
 my %reqmodules = ('Test::More' => 0,
 		  'Storable' => '1.0006');

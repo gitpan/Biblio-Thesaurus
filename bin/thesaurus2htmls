@@ -1,67 +1,110 @@
 #!/usr/bin/perl -s
 
-our ($dir);
+our ($dir,$nostyle);
 $dir ||= ".";
 
 my $thesaurus= shift or die("Usage: $0 [-dir=...] thesarus\n");
 mkdir($dir) unless -d $dir;
 
+my $obj;
+
 use Biblio::Thesaurus;
 use CGI qw(:all :nodebug);
 
-my $obj = thesaurusLoad($thesaurus);
-open (G,">$dir/0_lista_de_termos.html") or die("cant create index");
 
-print G $obj->downtr(
+for my $lang ("",@ARGV)
+{
+  if($lang){ system("thesaurusTranslate $thesaurus - $lang > _$thesaurus$lang"); 
+             $thename="_$thesaurus$lang";}
+  else     { $thename=$thesaurus; }
+
+  my $la="!";
+  
+  $obj = thesaurusLoad($thename);
+  open (G,">$dir/${lang}0_lista_de_termos.html") or die("cant create index");
+  binmode(G,":utf8");
+  binmode(STDERR,":utf8");
+
+  print G $obj->downtr(
      {-default  => sub { 
           my $cla=(exists $obj->{languages}{$rel})?"lingua":"rel";
           if (@terms > 1) {
 	    li({-class => $cla},
 	       strong($obj->getDescription($rel)),"\t".
-	       ul(li([map{ a({href=>t2f($_)},$_)."\n"} sort @terms])))."\n";
+	       ul(li([map{ a({href=>t2f($_,$cla,$rel)},$_)."\n"} sort @terms])))."\n";
 	  }
           else {
 	    li({-class => $cla, '-lang' => $rel},
 	       strong($obj->getDescription($rel)),"\t".
-	       join(", ", map{ a({href=>t2f($_)},$_)."\n"} sort @terms))."\n";
+	       join(", ", map{ a({href=>t2f($_,$cla,$rel)},$_)."\n"} sort @terms))."\n";
 	  }
 	},
-      -order    => ["IOF","PT","EN","FR",'SP','ES',"DE","IT","DA","NL","SV","FI" 
+      -order    => ["IOF",
+                   "PT","EN","FR",'SP','ES',"DE","IT","DA","NL","SV","FI" ,"EL","HU","HE"
                   ,"BT","NT","RT","MT","UF","USE","SN"],
-      -end      => sub { "Thesaurus<small>:\n $_ \nFIM\n"},
+      -end      => sub { ambsheader($obj->{title},$obj->{baselang}).
+                        ($obj->{title}? h2($obj->{title}):"").
+                        ($obj->{author}? h3($obj->{author}):"").
+                        "<small>\n<ol> $_ </ol>\n</small>".
+                         ambsfooter();
+                       },
       -eachTerm => sub {
-          my $tt=t2f($term);
+          mkdir("$dir/" . uc($obj->{baselang})) unless -d ("$dir/" . uc($obj->{baselang}));
+          my $tt=t2f($term,"lingua",$obj->{baselang},1);
           open(F,">$dir/$tt") or die ("cant create file $dir/$tt\n");
-          print F ambsheader($term);
+          binmode(F,":utf8");
+          print F ambsheader($term,$obj->{baselang});
           print F h3($term).ul($_)."\n";
           print F ambsfooter();
           close F;
           print STDERR "$term\n";
-          li(a({href=>$tt},$term ));
+          
+          if(lett($term) ne $la){ $la = lett($term);
+                                   return li(a({href=>$tt},red($term)));}
+          else{ return  li(a({href=>$tt},$term));}
         },
       SN => sub{ li({-class=>"text"},strong("sn"),join("",@terms)) },
      });
-close G;
+  close G;
+}
 
 sub t2f{
- my $a = shift;
- ### for ($a){ tr/αινσϊΰθμςωβκξτϋδλοφόγυρη/aeiouaeiouaeiouaeiouaonc/; }
+ my ($a,$c,$r,$f)=@_;
+ my $dir= uc( ($c eq "lingua")? $r : $obj->{baselang});
  for ($a){ 
-           tr [A-ZΑΙΝΣΪΒΚΤ] 
-              [a-zaeiouaeo] ;
-           tr/αινσϊΰθμςωβκξτϋδλοφόγυρη/AEIOUAEIOUAEIOUAEIOUAONC/;
-           s/[Ίͺ\[\] \(\)\/\?\":]/_/g }
- "$a.html"
+           s/[Ίͺ\[\] \(\)\/\?\":]/_/g ;
+           tr [A-ZΑΙΝΣΪΒΚΤΗΓΥΡΔΛΟΦά] 
+              [a-zαινσϊβκτηγυρδλοφό] ;
+           s/([\x{80}-\x{ffff}])/sprintf('=%x',ord($1))/ge ;
+#           tr [A-ZΑΙΝΣΪΒΚΤΗΓΥΡΔΛΟΦά] 
+#              [a-zaeiouaeocaonaeiou] ;
+#           tr/αινσϊΰθμςωβκξτϋδλοφόγυρη/AEIOUAEIOUAEIOUAEIOUAONC/;
+         }
+ ($f)?"$dir/$a.html":"../$dir/$a.html"
+}
+
+sub lett{
+ my $p=shift;
+ $p =~ s/\W//g ;
+ $p =~ tr [A-ZΑΙΝΣΪΒΚΤΗΓΥΡΔΛΟΦά] 
+          [a-zaeiouaeocaonaeiou] ;
+ $p =~ tr [αινσϊβκτηγυρδλοφό] 
+          [aeiouaeocaonaeiou] ;
+ substr $p,0,1;
 }
 
 sub ambsheader{
- my $t=shift;
+ my ($t,$l)=@_;
  return qq{<?xml version="1.0"?>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$l" lang="$l">
  <head>
   <title>$t</title>
-  <link href="http://eremita.di.uminho.pt/~ambs/style.css" rel="stylesheet"
-type="text/css"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+} .
+ ($nostyle
+  ?""
+  : qq{<link href="http://eremita.di.uminho.pt/~ambs/style.css" rel="stylesheet" type="text/css"/>\n}).
+ qq{
  </head>
  <body>
 };
@@ -73,6 +116,8 @@ sub ambsfooter{
 </html>
 }
 }
+
+sub red{ font({color=>"red"},@_)}
 
 
 __END__

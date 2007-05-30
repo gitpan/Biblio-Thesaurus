@@ -11,17 +11,24 @@ examples/thesaurus.english
 examples/thesaurus.portuguese
 bin/thesaurus2any
 bin/thesaurus2htmls
+bin/biling2thesaurus
+bin/tag2thesaurus
+bin/thesaurus2biling
+bin/thesaurusSC
+bin/thesaurusV
 bin/thesaurusTranslate
 bin/thesaurus2TMX
+bin/thesaurus2tex
 INSTALL
 lib/Biblio/Thesaurus.pm
 Makefile.PL
 MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
 README
-t/0_simple.t
-t/1_join.t
-t/9_big.t
+t/00_simple.t
+t/01_construct.t
+t/10_join.t
+t/90_big.t
 t/a.the
 t/b.the
 t/dup.the

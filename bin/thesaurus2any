@@ -101,6 +101,6 @@ sub t2tex{
   ) ; 
 }
 
-if($tex){t2tex();}
-if($cat){t2cat();}
-if($thes){t2the();}
+if   ($tex){t2tex();}
+elsif($cat){t2cat();}
+else       {t2the();}

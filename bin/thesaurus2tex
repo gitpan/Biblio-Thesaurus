@@ -1,0 +1,85 @@
+#!/usr/bin/perl -w -s
+
+use locale;
+
+use Biblio::Thesaurus;
+my $the = shift;
+my $dest = shift || "thesaurus";
+
+my $obj = thesaurusLoad($the);
+
+my $tit = $obj->{title} || $dest;
+my $aut = $obj->{author} || "";
+my $desc = $obj->{desc} || "";
+open(F,">$dest.tex") or die;
+print F qq{
+\\documentclass[twoside,portuges]{article}
+\\RequirePackage[a4paper,top=3cm,left=2cm,right=2cm,bottom=1.5cm,nofoot]{geometry}
+\\parindent 0pt
+%\\parskip 3pt
+
+\\usepackage{babel}
+\\usepackage[latin1]{inputenc}
+\\usepackage{t1enc}
+\\usepackage{aeguill}
+\\usepackage{dict}
+\\begin{document}
+
+\\title{$tit}
+\\author{$aut}
+\\date{\\today}
+\\maketitle
+$desc
+\\newpage
+\\twocolumn
+};
+
+print F $obj->toTex({},{
+##             -default  => sub { "\n$rel \t".join("\n\t",@terms)},
+             -eachTerm => sub { $term =~ s/_/\\_/g;
+                                s/_/\\_/g;
+                                 "\n\\term{$term}{
+  \\begin{description}
+  $_
+  \\end{description}}\n"},
+             -end      => sub { "\\begin{dictionary}\n$_\n\\end{dictionary}\n"},
+##             -order    => ["BT","NT","RT"],
+            });
+
+print F q{
+\end{document}
+};
+
+close(F);
+
+__END__
+
+=head1 NAME
+
+thesaurus2tex - ISO-Thesaurus completion and LaTeX translator
+
+=head1 SYNOPSIS
+
+ thesaurus2tex  file.the > file.tex
+
+ pdflatex file
+ dicttex  file
+ pdflatex file    ## to make file.pdf
+
+=head1 DESCRIPTION
+
+
+=head2 EXPORT
+
+
+=head1 AUTHOR
+
+J.Joao Almeida, jj@di.uminho.pt
+
+=head1 SEE ALSO
+
+dicttex   (http://natura.di.uminho.pt)
+
+perl(1).
+
+=cut      

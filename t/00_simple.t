@@ -1,25 +1,21 @@
 # -*- cperl -*-
 use Data::Dumper;
 use strict;
-use Test;
-
-BEGIN { plan tests => 11 }
+use Test::More tests => 11;
 
 # Check module loadability
-use Biblio::Thesaurus;
-my $loaded = 1;
-ok(1);
+BEGIN { use_ok("Biblio::Thesaurus"); }
 
 # Check 'transitive closure' method
 my $thesaurus = thesaurusLoad('examples/thesaurus.portuguese');
 my @ft= $thesaurus->tc("local","NT");
 my $count = scalar(@ft);
-ok(10,$count);
+is(10,$count);
 
 # Check depth_first
 my $ft= $thesaurus->depth_first("local" , 2 ,"NT","INST");
 my $k=keys(%$ft);
-ok($k,10-1);
+is($k,10-1);
 
 # Check miscelaneous
 ok(defined($thesaurus->{baselang}));
@@ -27,9 +23,9 @@ ok(defined($thesaurus->{languages}{$thesaurus->{baselang}}));
 
 # Check multi-lang support
 $thesaurus = thesaurusLoad("examples/animal.the");
-ok($thesaurus->{EN}{cat},"gato");
+is($thesaurus->{EN}{cat},"gato");
 
-ok($thesaurus->getdefinition("cat"),"gato");
+is($thesaurus->getdefinition("cat"),"gato");
 
 # Check definition type comparison
 ok($thesaurus->isDefined('GaTo'));

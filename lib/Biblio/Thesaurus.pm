@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 
 ##
 #
@@ -46,6 +46,11 @@ sub order {
   my ($self,@names) = @_;
   if(@names){ $self->{order} = [@names] ; }
   else { defined $self->{order} ? (@{$self->{order}}) : () }
+}
+
+sub isLanguage{
+  my ($self,$l) = @_;
+  return defined $self->{languages}{$l}
 }
 
 sub languages{
@@ -140,25 +145,24 @@ sub _default_inversions {
 #
 #
 sub _translateTerm {
-  my ($self,$term,$lang) = @_;
+  my ($self,$term,$lang,$dic) = @_;
+  $dic = {} unless $dic;
 
-  if ($lang) {
-    my $trad;
-    $lang = uc($lang);
+  $lang = uc($lang);
     # Se foi $lang definido como linguagem
-    if (defined($self->{languages}{$lang})) {
+  if (defined($self->{languages}{$lang})) {
+      my $trad;
       # Se existe a tradução
       if (defined($trad = $self->{$self->{baselang}}{$term}{$lang})) {
 	return $trad;
-      } else {
-	return "[$lang:".$self->getdefinition($term)."]";
-      }
-    } else {
-      return "[$lang:".$self->getdefinition($term)."]";
-    }
-  } else {
-    return "[$lang:".$self->getdefinition($term)."]";
+      } 
   }
+
+  if(defined $dic->{$term})          {return         $dic->{$term}}
+  if(defined $dic->{lcfirst($term)}) {return ucfirst($dic->{lcfirst($term)})}
+  if(defined $dic->{lc($term)})      {return         $dic->{lc($term)}}
+
+  return "[$self->{baselang}-$lang:".$self->getdefinition($term)."]";
 }
 
 
@@ -356,7 +360,15 @@ sub _setExternal {
   return $self;
 }
 
-sub _isExternal {
+sub setExternal {
+  my ($self,@rels) = @_;
+  for (@rels) {
+    $self->{externals}{uc($_)} = 1;
+  }
+  return $self;
+}
+
+sub isExternal {
   my ($self,$ext) = @_;
   return (defined($self->{externals}{uc($ext)}) &&
 	  defined($self->{externals}{uc($ext)}) == 1);
@@ -429,6 +441,9 @@ sub getHTMLTop {
 #
 #
 sub thesaurusLoad {
+###  my %opt =();  ## encoding => "utf8";
+###  if(ref($_[0]) eq "HASH") {%opt = (%opt , %{shift(@_)}) } ;
+
   my ($file,$self) = @_;
   my %thesaurus;
 
@@ -447,6 +462,7 @@ sub thesaurusLoad {
 
   # Open the thesaurus file to load
   open ISO, $file or die (q/Can't open thesaurus file/);
+###  binmode(ISO,"$opt{encoding}:") if($opt{encoding});
 
   # While we have commands or comments or empty lines, continue...
   while(($_ = <ISO>)=~/(^(%|#))|(^\s*$)/) {
@@ -457,6 +473,17 @@ sub thesaurusLoad {
       # Treat the inv*erse command
       $self->{inverses}{uc($1)} = uc($2);
       $self->{inverses}{uc($2)} = uc($1);
+
+    } elsif (/^%\s*enc(oding)?\s+(\S+)/) {
+
+      $self->{encoding} = $2;
+      binmode(ISO,"$2:");
+
+    } elsif (/^%\s*tit(le)?\s+(.+)/) {
+      $self->{title} = $2;
+
+    } elsif (/^%\s*aut(hor)?\s+(.+)/) {
+      $self->{author} = $2;
 
     } elsif (/^%\s*desc(ription)?\[(\S+)\]\s+(\S+)\s+/) {
 
@@ -603,7 +630,7 @@ sub _treatMetas1 {
 
  if(@ts=$t->terms("_order_","NT"))   { $t->order(@ts); 
           @r{@ts,"_order_"}=(@ts,1) }
- if(@ts=$t->terms("_external_","NT")){ $t->_setExternal(@ts);
+ if(@ts=$t->terms("_external_","NT")){ $t->setExternal(@ts);
           @r{@ts,"_external_"}=(@ts,1) }
  if(@ts=$t->terms("_top_","NT"))     { $t->topName($ts[0]);
           $r{"_top_"}=1 }
@@ -620,7 +647,7 @@ sub _treatMetas1 {
    $t->downtr(
      { SN        => sub{ $t->describe({rel => $term, desc=>$terms[0]}) }, ## FALTA A LINGUA
        INV       => sub{ $t->addInverse($term,$terms[0])},
-       RANG      => sub{ $t->_setExternal($term)},
+       RANG      => sub{ $t->setExternal($term)},
        -order    => ["SN","INV"],
        -eachTerm => sub{ $r{$term}=$term },
      }, @ts);
@@ -692,16 +719,25 @@ sub addInverse {
 ###
 #
 #
-sub save {
+sub meta2str {
   my $obj = shift;
-  my $file = shift;
-  my ($term,$class);
-
-  my %thesaurus = %{$obj->{$obj->{baselang}}};
+  my $term;
   my %inverses = %{$obj->{inverses}};
   my %descs = %{$obj->{descriptions}};
 
   my $t = "";
+
+  # Save the 'encoding' command
+  #
+  $t.="\%encoding $obj->{encoding}\n\n" if defined $obj->{encoding} ;
+
+  # Save the 'title' command
+  #
+  $t.="\%title $obj->{title}\n\n" if defined $obj->{title};
+
+  # Save the 'author' command
+  #
+  $t.="\%author $obj->{author}\n\n" if defined $obj->{author};
 
   # Save the externals commands
   #
@@ -738,6 +774,18 @@ sub save {
     }
   }
   $t.="\n\n";
+  $t;
+}
+
+##
+#
+#
+sub save {
+  my $obj = shift;
+  my $file = shift;
+  my ($term,$class);
+  my %thesaurus = %{$obj->{$obj->{baselang}}};
+  my $t = meta2str($obj); #save the metadata
 
   # Save the thesaurus
   #
@@ -755,6 +803,7 @@ sub save {
   }
 
   open F, ">$file" or return 0;
+  binmode(F,"$obj->{encoding}:") if defined $obj->{encoding};
   print F $t;
   close F;
   return 1;
@@ -939,7 +988,7 @@ sub dumpHTML {
   my %thesaurus = %{$obj->{$obj->{baselang}}};
   my $t = "";
   for (keys %thesaurus) {
-    $t.=_thesaurusGetHTMLTerm($_,$obj);
+    $t.=_thesaurusGetHTMLTerm($_,$obj,"",$obj->{baselang});
   }
   return $t;
 }
@@ -1140,24 +1189,36 @@ sub addTerm {
 #
 #
 sub addRelation {
-  my $obj = shift;
-  my $term = shift;
-  my $rel = uc(shift);
-  my @terms = @_;
+  my ($obj, $term, $rel, @terms) = @_;
+  $rel = uc($rel);
+
   $obj->{descriptions}{$rel} = "..." 
     unless defined($obj->{descriptions}{$rel});
 
   unless ($obj->isDefined($term)) {
     $obj->{defined}{lc(_term_normalize($term))} = _term_normalize($term);
   }
+
   $term = $obj->_definition($term);
+
   if (exists($obj->{externals}{$rel})) {
-	$obj->{$obj->{baselang}}{$term}{$rel} = $terms[0];
+    $obj->{$obj->{baselang}}{$term}{$rel} = $terms[0];
   } else {
-  	push @{$obj->{$obj->{baselang}}{$term}{$rel}},
-    		map {_term_normalize($_)} @terms;
+    push @{$obj->{$obj->{baselang}}{$term}{$rel}},
+      map {_term_normalize($_)} @terms;
+    for (@terms) {
+      $obj->addTerm($_) unless $obj->isDefined($_);
+    }
   }
 
+}
+
+###
+#
+#
+sub removeRelation {
+  my ($self, $term, $rel, @terms) = @_;
+  $rel = uc($rel);
 }
 
 ###
@@ -1253,7 +1314,12 @@ sub downtr {
       }
     }
     for($r){
-      $r2 .= defined($handler->{'-eachTerm'}) ? &{$handler->{'-eachTerm'}} : $_;
+      if (exists($handler->{'-eachTerm'})) {
+        my $ans = &{$handler->{'-eachTerm'}};
+        $r2 .= ($ans)?$ans:"";
+      } else {
+        $r2 .= $_;
+      }
     }
   }
   if (defined($handler->{-end})) { 
@@ -1507,6 +1573,14 @@ Example:
   NT Biography ...
   RT ...
 
+=item B<enc>oding
+
+This command defines the encoding used in the thesaurus file.
+
+Example:
+
+ %enc utf8
+
 =item B<inv>erse
 
 This command defines the mathematic inverse of the relation. That
@@ -1657,6 +1731,10 @@ added. To use it, you should supply a file name.
 Note: if the process fails, this method will return 0. Any other
 method die when failing to save on a file.
 
+=head2 meta2str
+
+This method returns the ISO ascii description of the metadata.
+
 =head2 storeOn
 
 This method saves the thesaurus object in Storable format. You should
@@ -1692,11 +1770,15 @@ To add relations to a term, use this method. It can be called again
 and again. Previous inserted relations will not be deleted.  This
 method can be used with a list of terms for the relation like:
 
-  $obj->thesaurusAddRelation('Animal','NT','cat','dog','cow','camel');
+  $obj->addRelation('Animal','NT','cat','dog','cow','camel');
 
 Note: After you add a big amount of relations, autocomplete the
 thesaurus using the $obj->complete() method. Completing after each
 relation addiction is time and cpu consuming.
+
+=head2 removeRelation
+
+  $obj->removeRelation('Animal','NT','cat','dog','cow','camel');
 
 =head2 deleteTerm
 
@@ -1712,6 +1794,18 @@ or to define a new class.
 =head2 isDefined
 
 Use this method to check if a term exists in the thesaurus.
+
+=head2 setExternal
+
+Use this method to define that a relation is "extern". 
+
+=head2 isExternal
+
+Use this method to check if a relation is "extern". 
+
+=head2 isLanguage
+
+Use this method to check if a relation is a Language.
 
 =head2 getdefinition
 

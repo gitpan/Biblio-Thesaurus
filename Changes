@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.28 Wed May 30 14:43:00 2007
+	- Added %enc encoding command;
+	- Bug fixes;
+
 0.27 Wed Jul 20 21:13:00 2005
 	- Forgot to add thesaurus2TMX to the MANIFEST file. Sorry
 
