@@ -1,10 +1,20 @@
 #!/usr/bin/perl -s
 
+eval 'exec /usr/bin/perl -s -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
 our ($all);
 
 my $langa = shift;
 my ($l1,$l2) = ($langa =~ m{(.*)\.\.(.*)});
-my $thesaurus= shift or die("Usage: $0 l1..l2  thesarus\n");
+die("Usage: $0 l1..l2  thesaurus\n") unless $l1 && $l2;
+
+$l1=uc($l1);
+$l2=uc($l2);
+
+my $thesaurus= shift or die("Usage: $0 l1..l2  thesaurus\n") ;
+
+die("thesaurus $thesaurus not found\n") unless -f $thesaurus;
 
 use Biblio::Thesaurus;
 
@@ -20,8 +30,8 @@ $obj->downtr(
      IOF => sub { $cl = join(",",@terms); },
 #     BT => sub { $bt = join(",",@terms); },
      -eachTerm => sub { 
-         if($obj->baselang() eq $l1) {$p1 =  $term; }
-         if($obj->baselang() eq $l2) {$p2 =  $term; }
+         if(uc($obj->baselang()) eq $l1) {$p1 =  $term; }
+         if(uc($obj->baselang()) eq $l2) {$p2 =  $term; }
 #         $cl ||=$bt;
          if ($p1 || $p2){
            $p1 = "[$l1-$l2 $p2]" unless $p1;

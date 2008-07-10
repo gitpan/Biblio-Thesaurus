@@ -29,7 +29,7 @@ our @EXPORT = qw(
 our ($rel,@terms,$term);
 
 # Version
-our $VERSION = '0.28';
+our $VERSION = '0.29';
 
 ##
 #
@@ -183,10 +183,10 @@ sub appendThesaurus {
   if ($self->{baselang} eq $other->{baselang}) {
     $new->{baselang} = $self->{baselang}
 
-  } elsif ($self->{baselang} eq "?") {
+  } elsif ($self->{baselang} eq "_") {
     $new->{baselang} = $other->{baselang}
 
-  } elsif ($other->{baselang} eq "?") {
+  } elsif ($other->{baselang} eq "_") {
     $new->{baselang} = $self->{baselang}
 
   } else {
@@ -236,7 +236,7 @@ sub appendThesaurus {
 
   # Languages: union
   $new->{languages} = _ffjoin("languages",$self,$other);
-  # delete($new->{languages}{"?"}) if ($new->{baselang} ne "?");
+  # delete($new->{languages}{"_"}) if ($new->{baselang} ne "_");
 
   # Get terms for the new thesaurus
   my @terms = _set_of(keys  %{$self->{ $self->{baselang}}},
@@ -254,24 +254,27 @@ sub appendThesaurus {
       $new->{defined}{lc($def)} = $def;
 
       my @class = _set_of(keys %{$self->{$self->{baselang}}{$a_def}},
-			 keys %{$other->{$other->{baselang}}{$b_def}});
+                          keys %{$other->{$other->{baselang}}{$b_def}});
 
       # para cada uma das suas relações...
       for my $class (@class) {
 	if ($class eq "_NAME_") {
 
+        #  print STDERR Dumper($new->{$new->{baselang}}{$def});
 	  # optar pela forma do thesaurus A
 	  $new->{$new->{baselang}}{$def}{_NAME_} = $def;
 
-	} elsif ($new->{externals}{$class}) {
-
-	  $new->{$new->{baselang}}{$def}{$class} =
-	    $self->{$new->{baselang}}{$def}{$class} ||
-	    $other->{$new->{baselang}}{$def}{$class};
+        } elsif ($new->{externals}{$class}) {
+	  if (exists($self->{$self->{baselang}}{$a_def}{$class})) {
+            push @{$new->{$new->{baselang}}{$def}{$class}}, @{$self->{$self->{baselang}}{$a_def}{$class}},
+          }
+	  if (exists($other->{$other->{baselang}}{$b_def}{$class})) {
+            push @{$new->{$new->{baselang}}{$def}{$class}}, @{$other->{$other->{baselang}}{$b_def}{$class}},
+          }
 
 	} elsif ($new->{languages}{$class}) {
 
-	  $new->{$new->{baselang}}{$def}{$class} = "?";
+	  $new->{$new->{baselang}}{$def}{$class} = "_";
 
 	} else {
 	  if (exists($self->{$self->{baselang}}{$a_def}{$class}) &&
@@ -350,14 +353,6 @@ sub _default_descriptions {
 	  'UF'  => q/Quasi synonym/,
 	  'SN'  => q/Scope note/,
 	 };
-}
-
-sub _setExternal {
-  my ($self,@rels) = @_;
-  for (@rels) {
-    $self->{externals}{uc($_)} = 1;
-  }
-  return $self;
 }
 
 sub setExternal {
@@ -441,8 +436,10 @@ sub getHTMLTop {
 #
 #
 sub thesaurusLoad {
-###  my %opt =();  ## encoding => "utf8";
-###  if(ref($_[0]) eq "HASH") {%opt = (%opt , %{shift(@_)}) } ;
+
+  my %opt =();
+  # completed => 1
+  if(ref($_[0]) eq "HASH") {%opt = (%opt , %{shift(@_)}) } ;
 
   my ($file,$self) = @_;
   my %thesaurus;
@@ -452,7 +449,7 @@ sub thesaurusLoad {
     $self->{descriptions} = _default_descriptions();
     $self->{externals}    = _default_norelations();
     $self->{name}         = "_top_";
-    $self->{baselang}     = "?";
+    $self->{baselang}     = "_";
     $self->{languages}    = {};
     $self->{defined}      = {};
     $self->{version}      = $VERSION; }
@@ -485,28 +482,28 @@ sub thesaurusLoad {
     } elsif (/^%\s*aut(hor)?\s+(.+)/) {
       $self->{author} = $2;
 
-    } elsif (/^%\s*desc(ription)?\[(\S+)\]\s+(\S+)\s+/) {
+    } elsif (/^%\s*desc(ription)?\[(\S+)\]\s+(\S+)\s+(.*)$/) {
 
       # Treat the desc*cription [lang] command....  'RT EN'
-      $self->{descriptions}{uc($3)." ".uc($2)} = $';
+      $self->{descriptions}{uc($3)." ".uc($2)} = $3;
 
-    } elsif (/^%\s*desc(ription)?\s+(\S+)\s+/) {
+    } elsif (/^%\s*desc(ription)?\s+(\S+)\s+(.*)$/) {
 
       # Treat the desc*cription command
-      $self->{descriptions}{uc($2)} = $';
+      $self->{descriptions}{uc($2)} = $3;
 
-    } elsif (/^%\s*ext(ernals?)?\s+/) {
+    } elsif (/^%\s*ext(ernals?)?\s+(.*)$/) {
 
       # Treat the ext*ernals command
-      chomp(my $classes = uc($'));
+      chomp(my $classes = uc($2));
       for (split /\s+/, $classes) {
 	$self->{externals}{$_} = 1;
       }
 
-    } elsif (/^%\s*lang(uages?)?\s+/) {
+    } elsif (/^%\s*lang(uages?)?\s+(.*)$/) {
 
       # Treat the lang*uages command
-      chomp(my $classes = uc($'));
+      chomp(my $classes = uc($2));
       for (split /\s+/, $classes) {
 	$self->{languages}{$_} = 1;
       }
@@ -517,7 +514,7 @@ sub thesaurusLoad {
 
     } elsif (/^%\s*baselang(uage)?\s+(\S+)/) {
 
-      $self->{baselang} = $2;
+      $self->{baselang} = uc($2);
 
     } elsif (/^%/) {
 
@@ -540,14 +537,15 @@ sub thesaurusLoad {
   # While there are definitions...
   do {
     # define local variables
-    my ($class,$term);
+    my ($class,$term,$relations);
 
     ## Concat lines that continue back in one
     s/\n[ \t]+/ /g;  # Can't use \s because "\n" =~ m!\s!
 
     # The first line contains the term to be defined
-    /(.*)\n/;
+    /(.*)\n((.|\n)+)/;
     $term = $1;
+    $relations = $2;
 
     # If the term is all spaces, go back...
     if ($term =~ /^\s+$/) {
@@ -564,18 +562,18 @@ sub thesaurusLoad {
       $self->{defined}{lc($term)} = $term;
 
       # The remaining are relations
-      $_ = $';
+      $_ = $relations;
 
       # OK! The term is *not* commented...
       # For each definition line...
       $_.="\n" unless /\n$/;
-      while (/(([^#\s]+)|#)\s+(.*)\n/g) {
+      while (/((([^#\s]+)|#)\s+(.*)\n)/g) {
 	# Is it commented?
-	unless ($1 eq "#") {
+	unless ($2 eq "#") {
 	  # it seems not... set the relation class
-	  $class = uc($1); # || $class;... now multiline are handled before this
+	  $class = uc($2); # || $class;... now multiline are handled before this
 
-	  print STDERR "** WARNING **: '$&'\n" unless $class;
+          print STDERR "** WARNING **: '$1'\n" unless $class;
 
 	  # See if $class has a description
 	  $self->{descriptions}{$class} = ucfirst(lc($class)) unless defined $self->{descriptions}{$class};
@@ -583,17 +581,18 @@ sub thesaurusLoad {
 
 	  # divide the relation terms by comma unless it is a language or extern relation
 	  if ( exists($self->{externals}{$class}) && defined($self->{externals}{$class}) ) {
-	    ## $thesaurus{$term}{$class}.= ($1?"$3":" $3");
-	    $thesaurus{$term}{$class}.= ($thesaurus{$term}{$class}?" $3":"$3");
+	    ## $thesaurus{$term}{$class}.= ($2?"$4":" $4");
+	    ## $thesaurus{$term}{$class}.= ($thesaurus{$term}{$class}?" $4":"$4");
+            push @{$thesaurus{$term}{$class}}, $4;
 	  } elsif (exists($self->{languages}{$class}) && defined($self->{languages}{$class})) {
-	    # $translations->{$class}->{_term_normalize($3)}.=$term;
-	    $self->{$class}{$3}.=$term;
-	    $self->{defined}{_term_normalize(lc($3))} = $term;
-	    $thesaurus{$term}{$class} = $3;
+	    # $translations->{$class}->{_term_normalize($4)}.=$term;
+	    $self->{$class}{$4}.=$term;
+	    $self->{defined}{_term_normalize(lc($4))} = $term;
+	    $thesaurus{$term}{$class} = $4;
 	  } else {
 	    push(@{$thesaurus{$term}{$class}}, map {
 	      _term_normalize($_)
-	    } split(/\s*,\s*/, $3));
+	    } split(/\s*,\s*/, $4));
 	  }
 	}
       }
@@ -610,7 +609,11 @@ sub thesaurusLoad {
   $self->{languages}{$self->{baselang}} = 1;
 
   # bless and return the thesaurus! Amen!
-  return complete(bless($self));
+  if (exists($opt{completed}) && $opt{completed}) {
+    return bless($self);
+  } else {
+    return complete(bless($self));
+  }
 }
 
 sub thesaurusLoadM {
@@ -755,7 +758,7 @@ sub meta2str {
 
   # Save the 'baselanguage' command
   #
-  $t.="\%baselanguage $obj->{baselang}\n\n" if $obj->{baselang} ne "?";
+  $t.="\%baselanguage $obj->{baselang}\n\n" if $obj->{baselang} ne "_";
 
   # Save the inverses commands
   #
@@ -793,11 +796,11 @@ sub save {
     $t.= "\n$thesaurus{$term}{_NAME_}\n";
     for $class ( keys %{$thesaurus{$term}} ) {
       next if $class eq "_NAME_";
-      if(defined $obj->{externals}{$class} ||
-	 defined $obj->{languages}{$class}) {
+      if(defined $obj->{languages}{$class}) {
 	$t.= "$class\t$thesaurus{$term}->{$class}\n";
       } else {
-	$t.= "$class\t" . join(", ", @{$thesaurus{$term}->{$class}}) . "\n";
+        # if save_compact, juntar por ',' as relacoes nao external
+        $t.= "$class\t$_\n" for (@{$thesaurus{$term}{$class}});
       }
     }
   }
@@ -880,9 +883,9 @@ sub navigate {
       #
       # Its description is "..."?
       my $desc = $obj->getDescription($rel, $language);
-      $html .= b($desc) unless $desc eq "...";
 
-      $html.= " $obj->{$obj->{baselang}}{$term}{$rel}".br;
+      $html .= join("<br/>\n", map { b($desc)." $_" } @{$obj->{$obj->{baselang}}{$term}{$rel}});
+      $html .= " ".br;
     } elsif (exists($obj->{languages}{$rel})) {
       ## This empty block is used for languages translations
 
@@ -1036,12 +1039,11 @@ sub _thesaurusGetHTMLTerm {
       if (exists($obj->{externals}{$c})) {
  	# put an external relation
 	my $desc = $obj->getDescription($c,$language);
-	if ($desc eq "...") {
-          $t.= "<div>$thesaurus{$term}{$c}</div>";
+        if ($desc eq "...") {
+          $t .= join("<br/>\n", map { div($_) } @{$thesaurus{$term}{$c}});
         } else {
-	  $t .= b($desc);
- 	  $t.= " $thesaurus{$term}{$c}".br;
-	}
+          $t .= join("<br/>\n", map { b($desc)." $_" } @{$thesaurus{$term}{$c}});
+        }
       } elsif (exists($obj->{languages}{$c})) {
  	# Jump the language relations
       } else {
@@ -1185,6 +1187,23 @@ sub addTerm {
   $obj->{defined}{lc($term)} = $term;
 }
 
+sub hasRelation {
+	my ($obj, $term, $rel, $rterm) = @_;
+	$rel = uc($rel);
+
+	return 0 unless $obj->isDefined($term); # Check if term exists
+	$term = $obj->_definition($term);
+
+	my $has = 0;
+	if (exists($obj->{externals}{$rel})) {
+	 	$has = 1 if (grep { $_ eq $rterm } @{$obj->{$obj->{baselang}}{$term}{$rel}});
+	} else {
+		$rterm = _term_normalize($rterm);
+		$has = 1 if (grep { $_ eq $rterm} @{$obj->{$obj->{baselang}}{$term}{$rel}});
+	}
+	return $has;
+}
+
 ###
 #
 #
@@ -1202,7 +1221,8 @@ sub addRelation {
   $term = $obj->_definition($term);
 
   if (exists($obj->{externals}{$rel})) {
-    $obj->{$obj->{baselang}}{$term}{$rel} = $terms[0];
+    push @{$obj->{$obj->{baselang}}{$term}{$rel}}, @terms;
+
   } else {
     push @{$obj->{$obj->{baselang}}{$term}{$rel}},
       map {_term_normalize($_)} @terms;
@@ -1293,8 +1313,7 @@ sub downtr {
       #
       # List of terms...
       #
-      if ($self->{externals}->{$rel} ||
-	  $self->{languages}->{$rel}) {
+      if ($self->{languages}->{$rel}) {
         @terms = ( $self->{$self->{baselang}}{$t}{$rel} );
       } else {
         @terms = @{$self->{$self->{baselang}}{$t}{$rel}};
@@ -1334,8 +1353,8 @@ sub downtr {
 #
 #
 sub tc{
-  # @_ == ($self,$term,@relations)
-  my %x = _tc_aux(@_);
+  my ($self,$term,@relations) = @_;
+  my %x = _tc_aux($self, $term, {}, @relations);
   return (keys %x);
 }
 
@@ -1343,10 +1362,12 @@ sub tc{
 #
 #
 sub _tc_aux {
-  my ($self,$term,@relat) = @_;
+  my ($self,$term,$vis,@relat) = @_;
   $term = $self->getdefinition($term);
   my %r = ( $term => 1 );
   for ($self->terms($term,@relat)) {
+    next if exists $vis->{$_};
+    $vis->{$_}++;
     %r = (%r, $_ => 1,  _tc_aux($self,$_,@relat)) unless $r{$_};
   }
   return %r;
@@ -1693,6 +1714,12 @@ earlier sections. It returns the object with the contents of the
 file. If the file does not defined relations and descriptions about
 the ISO classes, they are added.
 
+Also,
+
+  $obj = thesaurusLoad({ completed => 1}, 'iso-file');
+
+can be used to B<not> complete the thesaurus after load.
+
 =head2 thesaurusMultiLoad
 
 You can join different thesaurus ISO files using this function:
@@ -1775,6 +1802,12 @@ method can be used with a list of terms for the relation like:
 Note: After you add a big amount of relations, autocomplete the
 thesaurus using the $obj->complete() method. Completing after each
 relation addiction is time and cpu consuming.
+
+=head2 hasRelation
+
+Checks if a specific relation exists in the Thesaurus:
+
+  if ($obj->hasRelation('Animal','NT','cat')) { ... }
 
 =head2 removeRelation
 

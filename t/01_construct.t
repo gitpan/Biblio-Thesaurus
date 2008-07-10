@@ -1,7 +1,7 @@
 # -*- cperl -*-
 
 use strict;
-use Test::More tests => 12;
+use Test::More tests => 16;
 
 BEGIN { use_ok("Biblio::Thesaurus") }
 
@@ -43,3 +43,8 @@ is_deeply([sort @allterms], [qw/bar foo ugh/]);
 $the->addRelation("foo", "BT", qw/zbr1 zbr2 zbr3 zbr4/);
 @allterms = $the->allTerms;
 is_deeply([sort @allterms], [qw/bar foo ugh zbr1 zbr2 zbr3 zbr4/]);
+
+ok($the->hasRelation("foo", "BT", "zbr1"));
+ok(!$the->hasRelation("foo", "XX", "zbr1"));
+ok(!$the->hasRelation("foo", "BT", "zbr5"));
+ok($the->hasRelation("foo","BT","ugh"));

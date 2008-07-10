@@ -1,5 +1,14 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.29 Thu Jul 10 18:20:00 2008
+         - removed all references to $', $` and $& (opefully a speed boost);
+         - corrected a bug referring to the baselang without being in uppercase;
+         - default baselang changed from ? to _;
+         - support for multiple external relations with same relation identifier;
+         - fix transitive-closure not to enter endless loops;
+         - fix thesaurusTranslate to treat correctly external relations;
+         - added 'hasRelation' method;
+
 0.28 Wed May 30 14:43:00 2007
 	- Added %enc encoding command;
 	- Bug fixes;

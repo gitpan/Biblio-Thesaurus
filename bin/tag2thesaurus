@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w -s
 
+eval 'exec /usr/bin/perl -w -s -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
 our($rs,$fs,$fss);
 
 my $bl = shift or die("usage: $0 [options] Baselang File
@@ -94,7 +97,7 @@ Example: if the file has the following format
 
 the command
 
- tag2thesaurus -rs='\n' -fs='::' -fss='=' L1 file
+ tag2thesaurus -rs='\n' -fs='::' -fss='=' L2 file
 
 would produce thesaurus :
 

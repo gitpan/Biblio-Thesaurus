@@ -44,7 +44,8 @@ $the->downtr( {
 		   }
 		 } else {
 		   if ($the->{externals}{$rel}) { ### Is external
-		     $termBody .= "$rel $term\n"
+		     $termBody .= join("", map { "$rel $_\n" } @terms);
+		     # $termBody .= "$rel $term\n"
 		   } else {
 		     if ($comment) {
 		       $termBody .= join("", map {
@@ -95,7 +96,6 @@ sub missing_translation {
     return undef;
   }
 }
-
 
 __END__
 
