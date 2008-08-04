@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.31 Mon Aug 04 21:10:00 2008
+	- Stupid Mac extended attributes. Now fixed.
+
 0.30 Mon Aug 04 18:01:02 2008
 	- added 'deleteRelation' method;
 	- added extra functionality to 'hasRelation' method;
