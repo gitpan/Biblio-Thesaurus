@@ -1,10 +1,10 @@
 --- #YAML:1.0
 name:                Biblio-Thesaurus
-version:             0.29
+version:             0.30
 abstract:            ~
 license:             ~
 author:              ~
-generated_by:        ExtUtils::MakeMaker version 6.43_01
+generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
     Storable:                      1.0006

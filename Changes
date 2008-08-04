@@ -1,13 +1,17 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.30 Mon Aug 04 18:01:02 2008
+	- added 'deleteRelation' method;
+	- added extra functionality to 'hasRelation' method;
+
 0.29 Thu Jul 10 18:20:00 2008
-         - removed all references to $', $` and $& (opefully a speed boost);
-         - corrected a bug referring to the baselang without being in uppercase;
-         - default baselang changed from ? to _;
-         - support for multiple external relations with same relation identifier;
-         - fix transitive-closure not to enter endless loops;
-         - fix thesaurusTranslate to treat correctly external relations;
-         - added 'hasRelation' method;
+    - removed all references to $', $` and $& (opefully a speed boost);
+    - corrected a bug referring to the baselang without being in uppercase;
+    - default baselang changed from ? to _;
+    - support for multiple external relations with same relation identifier
+    - fix transitive-closure not to enter endless loops;
+    - fix thesaurusTranslate to treat correctly external relations;
+    - added 'hasRelation' method;
 
 0.28 Wed May 30 14:43:00 2007
 	- Added %enc encoding command;
@@ -17,8 +21,8 @@ Revision history for Perl extension Biblio::Thesaurus.
 	- Forgot to add thesaurus2TMX to the MANIFEST file. Sorry
 
 0.26 Wed Jul 20  8:26:00 2005
-        - Added XML::TMX optional dependency to install thesaurus2TMX
-          script
+    - Added XML::TMX optional dependency to install thesaurus2TMX
+      script
 
 0.25 Sat Apr  2 16:12:00 2005
 	- Added some utility string to be installed;

@@ -9,6 +9,9 @@ use CGI qw/:standard/;
 
 use Data::Dumper;
 
+# Version
+our $VERSION = '0.30';
+
 # Module Stuff
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw() ] );
@@ -28,8 +31,6 @@ our @EXPORT = qw(
 
 our ($rel,@terms,$term);
 
-# Version
-our $VERSION = '0.29';
 
 ##
 #
@@ -708,15 +709,15 @@ sub addInverse {
   my ($obj,$a,$b) = @_;
   $a = uc($a);
   $b = uc($b);
-  $obj->{descriptions}->{$a}="..." unless(defined($obj->{descriptions}->{$a}));
-  $obj->{descriptions}->{$b}="..." unless(defined($obj->{descriptions}->{$b}));
+  $obj->{descriptions}{$a}="..." unless(defined($obj->{descriptions}{$a}));
+  $obj->{descriptions}{$b}="..." unless(defined($obj->{descriptions}{$b}));
 
   for (keys %{$obj->{inverses}}) {
-    delete($obj->{inverses}->{$_}) if (($obj->{inverses}->{$_} eq $a) ||
-				       ($obj->{inverses}->{$_} eq $b));
+    delete($obj->{inverses}{$_}) if (($obj->{inverses}{$_} eq $a) ||
+				       ($obj->{inverses}{$_} eq $b));
   }
-  $obj->{inverses}->{$a}=$b;
-  $obj->{inverses}->{$b}=$a;
+  $obj->{inverses}{$a}=$b;
+  $obj->{inverses}{$b}=$a;
 }
 
 ###
@@ -1195,11 +1196,15 @@ sub hasRelation {
 	$term = $obj->_definition($term);
 
 	my $has = 0;
-	if (exists($obj->{externals}{$rel})) {
-	 	$has = 1 if (grep { $_ eq $rterm } @{$obj->{$obj->{baselang}}{$term}{$rel}});
+	if ($rterm) {
+		if (exists($obj->{externals}{$rel})) {
+		 	$has = 1 if (grep { $_ eq $rterm } @{$obj->{$obj->{baselang}}{$term}{$rel}});
+		} else {
+			$rterm = _term_normalize($rterm);
+			$has = 1 if (grep { $_ eq $rterm} @{$obj->{$obj->{baselang}}{$term}{$rel}});
+		}
 	} else {
-		$rterm = _term_normalize($rterm);
-		$has = 1 if (grep { $_ eq $rterm} @{$obj->{$obj->{baselang}}{$term}{$rel}});
+		$has = 1 if exists($obj->{$obj->{baselang}}{$term}{$rel});
 	}
 	return $has;
 }
@@ -1236,9 +1241,46 @@ sub addRelation {
 ###
 #
 #
-sub removeRelation {
+sub deleteRelation {
   my ($self, $term, $rel, @terms) = @_;
   $rel = uc($rel);
+
+	if (@terms) {
+		for my $oterm (@terms) {
+			$self->_deleteRelation($term, $rel, $oterm);
+			## Se existe inversa, do the same shit
+			if (exists $self->{inverses}{$rel}) {
+				$self->_deleteRelation($oterm, $self->{inverses}{$rel}, $term);
+			}
+		}
+	} else {
+		if (exists($self->{externals}{$rel})) {
+			$self->_deleteRelation($term, $rel);
+		} else {
+			$self->deleteRelation($term, $rel, $self->terms($term,$rel));
+		}
+	}
+}
+
+###
+#
+#
+sub _deleteRelation {
+	my ($obj, $term, $rel, $oterm) = @_;
+
+	# return if the term is not defined
+  return unless $obj->isDefined($term);
+
+	$term = $obj->_definition($term);	
+	if ($oterm) {
+		# if we have a full relation (term,rel,term), then it is not an external relation
+		return if exists($obj->{externals}{$rel});
+		
+		$oterm = _term_normalize($oterm);
+		$obj->{$obj->{baselang}}{$term}{$rel} = [ grep { $_ ne $oterm } @{$obj->{$obj->{baselang}}{$term}{$rel}}];		
+	} else {
+		delete($obj->{$obj->{baselang}}{$term}{$rel});
+	}
 }
 
 ###
@@ -1809,9 +1851,13 @@ Checks if a specific relation exists in the Thesaurus:
 
   if ($obj->hasRelation('Animal','NT','cat')) { ... }
 
-=head2 removeRelation
+You can check if a term has a relation "X" with anything:
 
-  $obj->removeRelation('Animal','NT','cat','dog','cow','camel');
+  if ($obj->hasRelation('Animal','SN')) { ... }
+
+=head2 deleteRelation
+
+  $obj->deleteRelation('Animal','NT','cat','dog','cow','camel');
 
 =head2 deleteTerm
 

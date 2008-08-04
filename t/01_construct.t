@@ -1,7 +1,7 @@
 # -*- cperl -*-
 
 use strict;
-use Test::More tests => 16;
+use Test::More tests => 27;
 
 BEGIN { use_ok("Biblio::Thesaurus") }
 
@@ -48,3 +48,30 @@ ok($the->hasRelation("foo", "BT", "zbr1"));
 ok(!$the->hasRelation("foo", "XX", "zbr1"));
 ok(!$the->hasRelation("foo", "BT", "zbr5"));
 ok($the->hasRelation("foo","BT","ugh"));
+
+$the->complete;
+ok($the->hasRelation("ugh","NT","foo"));
+
+$the->deleteRelation("foo","BT","ugh");
+ok(!$the->hasRelation("foo","BT","ugh"));
+ok(!$the->hasRelation("ugh","NT","foo"));
+
+$the->addRelation("bar","SN","Uma scope note qualquer");
+ok($the->hasRelation("bar","SN"));
+
+$the->deleteRelation("bar","SN");
+ok(!$the->hasRelation("bar","SN"));
+
+$the->addRelation("bar","BT", "AA", "BB");
+$the->complete;
+ok($the->hasRelation("AA","NT","bar"));
+ok($the->hasRelation("BB","NT","bar"));
+
+$the->deleteRelation("bar","BT");
+ok(!$the->hasRelation("AA","NT","bar"));
+ok(!$the->hasRelation("BB","NT","bar"));
+ok(!$the->hasRelation("bar","BT","AA"));
+ok(!$the->hasRelation("bar","BT","BB"));
+
+
+
