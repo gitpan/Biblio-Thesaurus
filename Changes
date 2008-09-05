@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.32 Fri Sep 05 14:43:00 2008
+	- Added parser robustness
+	- Fixed Thesaurus2TeX
+
 0.31 Mon Aug 04 21:10:00 2008
 	- Stupid Mac extended attributes. Now fixed.
 

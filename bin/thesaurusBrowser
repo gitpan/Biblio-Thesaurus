@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Lingua::Flags;
+use Biblio::Thesaurus;
+use CGI qw.:standard.;
+
+## These hard-coded variables should pass to a configuration file,
+## somewhere. Also, this probly would be nice as an abstract class. But
+## we can discuss that later.
+
+our $iso_thesaurus = undef;
+our $storable_thesaurus = undef;
+
+
+
+
+if (param("flag")) {
+	print header(-type=>'image/gif'), as_gif(param("flag"));
+} else {
+	die "You must specify a ISO _or_ Storable thesaurus\n" unless (defined($iso_thesaurus) xor defined($storable_thesaurus));
+
+	my $the;
+	$the = thesaurusLoad($iso_thesaurus) if defined($iso_thesaurus);
+	$the = thesaurusRetrieve($storable_thesaurus) if defined($storable_thesaurus);
+
+	die "Error loading thesaurus file\n" unless defined $the;
+	
+	navigate($the);
+}
+
+
+
+sub navigate {
+	my $the = shift;
+}
+
+=head1 NAME
+
+foo - ...
+
+=head1 SYNOPSIS
+
+  use foo;
+  blah blah blah
+
+=head1 DESCRIPTION
+
+Stub documentation for foo, created by h2xs. It looks like the
+author of the extension was negligent enough to leave the stub
+unedited.
+
+Blah blah blah.
+
+=head1 SEE ALSO
+
+perl(1)
+
+=head1 AUTHOR
+
+Alberto Manuel Brandão Simões, E<lt>ambs@cpan.orgE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2008 by Alberto Manuel Brandão Simões
+
+=cut
+

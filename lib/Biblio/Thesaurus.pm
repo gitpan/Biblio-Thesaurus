@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -544,7 +544,7 @@ sub thesaurusLoad {
     s/\n[ \t]+/ /g;  # Can't use \s because "\n" =~ m!\s!
 
     # The first line contains the term to be defined
-    /(.*)\n((.|\n)+)/;
+    /(.+)\n((.|\n)+)/;
     $term = $1;
     $relations = $2;
 
@@ -568,11 +568,12 @@ sub thesaurusLoad {
       # OK! The term is *not* commented...
       # For each definition line...
       $_.="\n" unless /\n$/;
-      while (/((([^#\s]+)|#)\s+(.*)\n)/g) {
-	# Is it commented?
-	unless ($2 eq "#") {
-	  # it seems not... set the relation class
-	  $class = uc($2); # || $class;... now multiline are handled before this
+      while (/((([^#\s]+)|#)[ \t]*(.*)\n)/g) {
+		next unless $4;
+		# Is it commented?
+		unless ($2 eq "#") {
+	  		# it seems not... set the relation class
+	  		$class = uc($2); # || $class;... now multiline are handled before this
 
           print STDERR "** WARNING **: '$1'\n" unless $class;
 

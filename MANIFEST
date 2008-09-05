@@ -19,6 +19,7 @@ bin/thesaurusV
 bin/thesaurusTranslate
 bin/thesaurus2TMX
 bin/thesaurus2tex
+bin/thesaurusBrowser
 INSTALL
 lib/Biblio/Thesaurus.pm
 Makefile.PL
@@ -34,4 +35,5 @@ t/b.the
 t/dup.the
 t/pod-coverage.t
 t/pod.t
-
+t/02_empty.t
+t/02_empty.the
