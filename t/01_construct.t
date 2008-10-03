@@ -1,7 +1,7 @@
 # -*- cperl -*-
 
 use strict;
-use Test::More tests => 27;
+use Test::More tests => 31;
 
 BEGIN { use_ok("Biblio::Thesaurus") }
 
@@ -67,11 +67,21 @@ $the->complete;
 ok($the->hasRelation("AA","NT","bar"));
 ok($the->hasRelation("BB","NT","bar"));
 
+my @rels = $the->relations("bar");
+ok(!grep { $_ eq "_NAME_"} @rels);
+ok(grep {$_ eq "BT"} @rels);
+
 $the->deleteRelation("bar","BT");
 ok(!$the->hasRelation("AA","NT","bar"));
 ok(!$the->hasRelation("BB","NT","bar"));
 ok(!$the->hasRelation("bar","BT","AA"));
 ok(!$the->hasRelation("bar","BT","BB"));
+
+$the->deleteRelation("bar","BT");
+isa_ok($the, "Biblio::Thesaurus");
+
+$the->deleteRelation("bar","BT","AA");
+isa_ok($the, "Biblio::Thesaurus");
 
 
 

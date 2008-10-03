@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.32';
+our $VERSION = '0.33';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -76,6 +76,9 @@ sub terms {
   my $base = $self->{baselang};
   return () unless $self->isDefined($term);
   $term = $self->_definition($term);
+
+  @rels = map { uc $_ } @rels;
+
   return (map {
     if (defined($self->{$base}{$term}{$_})) {
       if (ref($self->{$base}{$term}{$_}) eq "ARRAY") {
@@ -1004,7 +1007,7 @@ sub dumpHTML {
 sub relations {
   my ($self,$term) = @_;
 
-  return sort keys %{$self->{$self->{baselang}}->{$term}}
+  return sort grep { $_ !~ /^_/ } keys %{$self->{$self->{baselang}}->{$term}}
 }
 
 
@@ -1258,7 +1261,9 @@ sub deleteRelation {
 		if (exists($self->{externals}{$rel})) {
 			$self->_deleteRelation($term, $rel);
 		} else {
-			$self->deleteRelation($term, $rel, $self->terms($term,$rel));
+			@terms = $self->terms($term,$rel);
+			return unless @terms;
+			$self->deleteRelation($term, $rel, @terms);
 		}
 	}
 }
@@ -1488,12 +1493,12 @@ Biblio::Thesaurus - Perl extension for managing ISO thesaurus
   $html = $obj->getHTMLTop();
 
   $output = $obj->downtr(\%handler);
-  $output = $obj->downtr(\%handler,'termo', ... );
+  $output = $obj->downtr(\%handler,'term', ... );
 
   $obj->appendThesaurus("iso-file");
   $obj->appendThesaurus($tobj);
 
-  $obj->tc('termo', 'relation1', 'relation2');
+  $obj->tc('term', 'relation1', 'relation2');
   $obj->depth_first('term', 2, "NT", "UF")
 
   $latex = $obj->toTex( ...)
