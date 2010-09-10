@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.34';
+our $VERSION = '0.35';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -477,8 +477,9 @@ sub thesaurusLoad {
 
     } elsif (/^%\s*enc(oding)?\s+(\S+)/) {
 
-      $self->{encoding} = $2;
-      binmode(ISO,"$2:");
+      $self->{encoding} = lc $2;
+      $self->{encoding} =~ s/_/-/g;
+      binmode ISO, ":encoding($self->{encoding})";
 
     } elsif (/^%\s*tit(le)?\s+(.+)/) {
       $self->{title} = $2;
@@ -816,7 +817,11 @@ sub save {
   }
 
   open F, ">$file" or return 0;
-  binmode(F,"$obj->{encoding}:") if defined $obj->{encoding};
+  if (defined $obj->{encoding}) {
+      $obj->{encoding} = lc($obj->{encoding});
+      $obj->{encoding} =~ s/_/-/g;
+      binmode(F,":encoding($obj->{encoding})") ;
+  }
   print F $t;
   close F;
   return 1;
@@ -1426,9 +1431,9 @@ sub toJson {
 sub _toJson {
     my ($self, $term, $rel) = @_;
     my $h = $self->depth_first($term, 1, @$rel);
-    my $json = "{ data: \"$term\"";
+    my $json = "{ \"data\": \"$term\"";
     if (keys %$h) {
-        $json .= ", children: [";
+        $json .= ", \"children\": [";
         $json .= join(", ", map { $self->_toJson($_, $rel) } keys %$h);
         $json .= "]"
     }
