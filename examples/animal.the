@@ -1,3 +1,4 @@
+%enc ISO_8859_1
 %baselang PT
 %languages EN
 %languages FR 
@@ -8,9 +9,8 @@
 %desc HAS Instâncias
 %desc IOF instância de 
 %inverse IOF HAS
+%top animal
 
-_top_
-NT animal
 
 animal
 NT mamífero, doméstico, réptil

@@ -1,5 +1,5 @@
+# -*- Mode: Perl; tab-width: 2; -*- 
 package Biblio::Thesaurus;
-
 require 5.006;
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.33';
+our $VERSION = '0.34';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -29,7 +29,7 @@ our @EXPORT = qw(
   &thesaurusMultiLoad
   @terms $term $rel);
 
-our ($rel,@terms,$term);
+our ($casesen,$rel,@terms,$term);
 
 
 ##
@@ -38,9 +38,9 @@ our ($rel,@terms,$term);
 sub top_name { topName(@_) }
 
 sub topName {
-  my ($self,$name) = @_;
+  my ($self, $name) = @_;
   if($name){ $self->{name} = $name;}
-  else {return $self->{name};}
+  else     { return $self->{name};}
 }
 
 sub order {
@@ -162,9 +162,9 @@ sub _translateTerm {
       } 
   }
 
-  if(defined $dic->{$term})          {return         $dic->{$term}}
+  if(defined $dic->{$term})          {return         $dic->{        $term}}
   if(defined $dic->{lcfirst($term)}) {return ucfirst($dic->{lcfirst($term)})}
-  if(defined $dic->{lc($term)})      {return         $dic->{lc($term)}}
+  if(defined $dic->{lc($term)})      {return      uc($dic->{     lc($term)})}
 
   return "[$self->{baselang}-$lang:".$self->getdefinition($term)."]";
 }
@@ -244,7 +244,7 @@ sub appendThesaurus {
 
   # Get terms for the new thesaurus
   my @terms = _set_of(keys  %{$self->{ $self->{baselang}}},
-		     keys %{$other->{$other->{baselang}}});
+		      keys  %{$other->{$other->{baselang}}});
 
   # Para cada termo do thesaurus...
   for my $term (@terms) {
@@ -258,7 +258,7 @@ sub appendThesaurus {
       $new->{defined}{lc($def)} = $def;
 
       my @class = _set_of(keys %{$self->{$self->{baselang}}{$a_def}},
-                          keys %{$other->{$other->{baselang}}{$b_def}});
+                         keys %{$other->{$other->{baselang}}{$b_def}});
 
       # para cada uma das suas relações...
       for my $class (@class) {
@@ -463,7 +463,7 @@ sub thesaurusLoad {
 
   # Open the thesaurus file to load
   open ISO, $file or die (q/Can't open thesaurus file/);
-###  binmode(ISO,"$opt{encoding}:") if($opt{encoding});
+	###  binmode(ISO,"$opt{encoding}:") if($opt{encoding});
 
   # While we have commands or comments or empty lines, continue...
   while(($_ = <ISO>)=~/(^(%|#))|(^\s*$)/) {
@@ -501,7 +501,7 @@ sub thesaurusLoad {
       # Treat the ext*ernals command
       chomp(my $classes = uc($2));
       for (split /\s+/, $classes) {
-	$self->{externals}{$_} = 1;
+				$self->{externals}{$_} = 1;
       }
 
     } elsif (/^%\s*lang(uages?)?\s+(.*)$/) {
@@ -509,7 +509,7 @@ sub thesaurusLoad {
       # Treat the lang*uages command
       chomp(my $classes = uc($2));
       for (split /\s+/, $classes) {
-	$self->{languages}{$_} = 1;
+				$self->{languages}{$_} = 1;
       }
 
     } elsif (/^%\s*top\s+(.*)$/) {
@@ -547,9 +547,9 @@ sub thesaurusLoad {
     s/\n[ \t]+/ /g;  # Can't use \s because "\n" =~ m!\s!
 
     # The first line contains the term to be defined
-    /(.+)\n((.|\n)+)/;
+    /(.+)(?:\n((.|\n)+)|\n?$)/;
     $term = $1;
-    $relations = $2;
+    $relations = $2 || "";
 
     # If the term is all spaces, go back...
     if ($term =~ /^\s+$/) {
@@ -619,6 +619,11 @@ sub thesaurusLoad {
   } else {
     return complete(bless($self));
   }
+}
+
+sub _lc{
+ if($casesen){$_[0]}
+ else {lc($_[0])}
 }
 
 sub thesaurusLoadM {
@@ -1406,6 +1411,30 @@ sub tc{
   return (keys %x);
 }
 
+
+##
+#
+#
+sub toJson {
+    my ($self, $rel) = @_;
+    $rel //= "NT";
+    $rel = [$rel] unless ref($rel);
+    my $top = $self->topName;
+    $self->_toJson($top, $rel);
+}
+
+sub _toJson {
+    my ($self, $term, $rel) = @_;
+    my $h = $self->depth_first($term, 1, @$rel);
+    my $json = "{ data: \"$term\"";
+    if (keys %$h) {
+        $json .= ", children: [";
+        $json .= join(", ", map { $self->_toJson($_, $rel) } keys %$h);
+        $json .= "]"
+    }
+    $json .= "}";
+}
+
 ###
 #
 #
@@ -1766,7 +1795,7 @@ Also,
 
   $obj = thesaurusLoad({ completed => 1}, 'iso-file');
 
-can be used to B<not> complete the thesaurus after load.
+can be used to say that the thesaurus needs  B<not> to be complete after load.
 
 =head2 thesaurusMultiLoad
 
@@ -1818,7 +1847,7 @@ use it when you want to load with the C<thesaurusRetrieve> function.
 =head2 addTerm
 
 You can add terms definitions using the perl API. This method adds a
-term on the thesaurus. Note that if that term already exists, all it's
+term on the thesaurus. Note that if that term already exists, all its
 relations will be deleted.
 
 =head2 all_terms
@@ -2021,7 +2050,8 @@ it is completed.
 
 =head2 baselang
 
-Use this method to retrieve the base language of the thesaurus.
+Use this method to set or retrieve the base language of the thesaurus.
+If no baselang is provided, the value "_" is returned
 
 =head2 downtr
 
@@ -2067,7 +2097,7 @@ tree of terms) related with C<$term> by relations C<@r> up to the level C<$lev>
 
   $hashref = $the->depth_first("frog", 2, "NT","UF")
 
-C<$lev> should be an integer grater then 0.
+C<$lev> should be an integer greater then 0.
 
 =head2 tc transitive closure
 
@@ -2106,6 +2136,14 @@ It uses downtr function to make the translation; a downtr handler can be given
 to tune some transformations details...
 
   print $thesaurus->toXml();
+
+=head2 toJson
+
+Returns a JSON tree based on NT relation. Other relation can be
+supplied as an argument. Future versions might include language
+selection.
+
+  print $thesaurus->toJson();
 
 =head1 AUTHOR
 

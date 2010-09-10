@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w -s
 
+our ($c);
 use locale;
-
+use strict;
 use Biblio::Thesaurus;
 my $the = shift;
 my $dest = shift || "thesaurus";
@@ -71,10 +72,12 @@ thesaurus2tex - ISO-Thesaurus completion and LaTeX translator
 =head1 SYNOPSIS
 
  thesaurus2tex  file.the > file.tex
+    -c   to include separators when first letters change (NOT YET)
 
  pdflatex file
  dicttex  file
  pdflatex file    ## to make file.pdf
+
 
 =head1 DESCRIPTION
 

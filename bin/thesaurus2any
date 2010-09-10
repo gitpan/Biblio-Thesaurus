@@ -2,13 +2,13 @@
 
 =head1 NAME
 
-t2any - translate thesaurus like notation to xml catalogue format
+thesaurus2any - translate thesaurus like notation to xml catalogue format
 
 =head1 SYNOPSYS
 
-  t2any -cat file > file.xml
-  t2any -thes file > file.the
-  t2any -tex file > file.tex
+  thesaurus2any -cat file > file.xml
+  thesaurus2any -thes file > file.the
+  thesaurus2any -tex file > file.tex
 
 =head1 DESCRIPTION
 
@@ -32,7 +32,7 @@ use vars qw($thes $cat $tex $multi);
 if ($multi) {
   $the = thesaurusMultiLoad(@ARGV);
 } else {
-  my $thesaurus = shift || die ("use: 	t2any filename\n");
+  my $thesaurus = shift || die ("use: 	thesaurus2any filename\n");
   $the = thesaurusLoadM($thesaurus);
 }
 

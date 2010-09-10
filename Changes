@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.34 Fri Sep 10 15:22:00 2010
+        - added method to export thesaurus in Json format
+
 0.33 Fri Oct 03 17:07:00 2008
 	- Fixed bug in function terms;
 

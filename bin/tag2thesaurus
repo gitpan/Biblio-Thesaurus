@@ -92,8 +92,8 @@ C<tag2thesaurus lang2 file> output looks like:
 
 Example: if the file has the following format
 
- L1=v11 :: L2= v21 :: Ln vn1 
- L1=v12 :: L2= v22 :: Ln vn2 
+ L1=v11 :: L2= v21 :: Ln= vn1 
+ L1=v12 :: L2= v22 :: Ln= vn2 
 
 the command
 

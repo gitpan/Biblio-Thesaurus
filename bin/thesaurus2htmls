@@ -3,7 +3,7 @@
 our ($dir,$nostyle);
 $dir ||= ".";
 
-my $thesaurus= shift or die("Usage: $0 [-dir=...] thesarus\n");
+my $thesaurus= shift or die("Usage: $0 [-dir=...] thesaurus [lang*]\n");
 mkdir($dir) unless -d $dir;
 
 my $obj;
@@ -132,4 +132,29 @@ type="text/css"/>
  <body>
 
 <!-- CONTENTS -->
+
+__END__
+
+=head1 NAME
+
+thesaurus2htmls - generates a HTML site (one file for each term)
+
+=head1 SYNOPSIS
+
+ thesaurus2htmls [-dir=D] thesaurus [lang*]
+
+=head1 DESCRIPTION
+
+For each term in each language passed as argument, creates a linked
+HTML page.
+
+=head1 AUTHOR
+
+J.Joao Almeida, jj@di.uminho.pt
+
+=head1 SEE ALSO
+
+perl(1).
+
+=cut      
 
