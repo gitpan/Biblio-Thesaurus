@@ -1,6 +1,6 @@
 # -*- Mode: Perl; tab-width: 2; -*- 
 package Biblio::Thesaurus;
-require 5.006;
+use 5.010;
 use strict;
 use warnings;
 require Exporter;
@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.35';
+our $VERSION = '0.36';
 
 # Module Stuff
 our @ISA = qw(Exporter);

@@ -1,5 +1,5 @@
 use ExtUtils::MakeMaker;
-
+use 5.010;
 my @scripts = ('bin/thesaurus2any',
                'bin/thesaurus2biling',
                'bin/thesaurusSC',

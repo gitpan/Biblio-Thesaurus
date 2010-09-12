@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.36 Sun Sep 12 11:25:00 2010
+     - Require 5.10 (just one //=, but more later, I expect);
+
 0.35 Fri Sep 10 19:33:00 2010
      - Fixed encoding support.
 
