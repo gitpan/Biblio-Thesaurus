@@ -37,3 +37,4 @@ t/pod-coverage.t
 t/pod.t
 t/02_empty.t
 t/02_empty.the
+t/03_toHash.t

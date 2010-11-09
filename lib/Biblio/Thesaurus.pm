@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.36';
+our $VERSION = '0.37';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -1383,11 +1383,11 @@ sub downtr {
       $term = $t;
 
       if (exists($handler->{$rel})) {
-	$r .=  &{$handler->{$rel}};
+          $r .=  &{$handler->{$rel}} // "";
       } elsif (exists($handler->{-default})) {
-	$r .=  &{$handler->{-default}};
+          $r .=  &{$handler->{-default}} // "";
       } else  {
-	$r .=  "\n$rel\t".join(", ",@terms);
+          $r .=  "\n$rel\t".join(", ",@terms);
       }
     }
     for($r){
@@ -1417,6 +1417,30 @@ sub tc{
 }
 
 
+###
+#
+#
+sub toHash {
+    my ($self, $rel) = @_;
+    $rel //= "NT";
+    $rel = [$rel] unless ref($rel);
+    my $top = $self->topName;
+    return +{ $top => $self->_toHash($top, $rel, [$top]) };
+}
+
+sub _toHash {
+    my ($self, $term, $rel, $stack) = @_;
+    my $h = $self->depth_first($term, 1, @$rel);
+    if (keys %$h) {
+        for (keys %$h) {
+            $h->{$_} = $self->_toHash($_, $rel, [@$stack, $_]);
+        }
+    } else {
+        $h = join("::", @$stack);
+    }
+    return $h;
+}
+
 ##
 #
 #
@@ -1431,7 +1455,7 @@ sub toJson {
 sub _toJson {
     my ($self, $term, $rel) = @_;
     my $h = $self->depth_first($term, 1, @$rel);
-    my $json = "{ \"data\": \"$term\"";
+    my $json = "{ \"data\": \"$term\", \"attr\":{id:\"$term\"}";
     if (keys %$h) {
         $json .= ", \"children\": [";
         $json .= join(", ", map { $self->_toJson($_, $rel) } keys %$h);
@@ -2150,6 +2174,15 @@ selection.
 
   print $thesaurus->toJson();
 
+
+=head2 toHash
+
+Returns a Hash reference with a tree based on NT relation. Other
+relation can be supplied as an argument. Future versions might include
+language selection.
+
+  print $thesaurus->toJson();
+
 =head1 AUTHOR
 
 Alberto Simoes, <albie@alfarrabio.di.uminho.pt>
@@ -2159,7 +2192,7 @@ José Joao Almeida, <jj@di.uminho.pt>
 Sara Correia,  <sara.correia@portugalmail.com>
 
 This module is included in the Natura project. You can visit it at
-http://natura.di.uminho.pt, and access the CVS tree.
+http://natura.di.uminho.pt, and access the SVN tree.
 
 =head1 COPYRIGHT & LICENSE
 
