@@ -6,7 +6,9 @@ my @scripts = ('bin/thesaurus2any',
                'bin/thesaurusV',
 	       'bin/thesaurus2htmls',
 	       'bin/tag2thesaurus',
+	       'bin/tax2thesaurus',
 	       'bin/thesaurusTranslate',
+	       'examples/thesaurus2graphviz',
 	       'bin/thesaurus2tex',
                'bin/biling2thesaurus');
 

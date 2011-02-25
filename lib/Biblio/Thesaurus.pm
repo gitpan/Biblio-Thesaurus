@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.37';
+our $VERSION = '0.38';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -174,148 +174,151 @@ sub _translateTerm {
 #
 #
 sub appendThesaurus {
-  my ($self,$other) = @_;
+    my ($self,$other) = @_;
 
-  # This way we handle full thesaurus objects or simple filename
-  unless (ref($other)) {
-    $other = thesaurusLoad($other);
-  }
+    # This way we handle full thesaurus objects or simple filename
+    unless (ref($other)) {
+        $other = thesaurusLoad($other);
+    }
 
-  my $new;
+    my $new;
 
-  # Check if baselang is the same, or if some of them is undefined
-  if ($self->{baselang} eq $other->{baselang}) {
-    $new->{baselang} = $self->{baselang}
+    # Check if baselang is the same, or if some of them is undefined
+    if ($self->{baselang} eq $other->{baselang}) {
+        $new->{baselang} = $self->{baselang}
 
-  } elsif ($self->{baselang} eq "_") {
-    $new->{baselang} = $other->{baselang}
+    } elsif ($self->{baselang} eq "_") {
+        $new->{baselang} = $other->{baselang}
 
-  } elsif ($other->{baselang} eq "_") {
-    $new->{baselang} = $self->{baselang}
+    } elsif ($other->{baselang} eq "_") {
+        $new->{baselang} = $self->{baselang}
 
-  } else {
-    return undef;
-  }
-
-  # If some of the top is _top_, the other is choosed. If
-  # there are two different tops, use the first ($self) one
-  if ($other->{name} eq $self->{name}) {
-    $new->{name} = $self->{name}
-
-  } elsif ($other->{name} eq "_top_") {
-    $new->{name} = $self->{name}
-
-  } elsif ($self->{name} eq "_top_") {
-    $new->{name} = $other->{name}
-
-  } else {
-    $new->{name} = $self->{name}
-  }
-
-  # VERSION: current module version
-  $new->{version} = $VERSION;
-
-  sub _ffjoin {
-    # key, hash1ref, hash2ref
-    my ($c,$a,$b) = @_;
-    if (exists($a->{$c}) && exists($b->{$c})) {
-      return {%{$a->{$c}},%{$b->{$c}}};
-    } elsif (exists($a->{$c})) {
-      return {%{$a->{$c}}}
-    } elsif (exists($b->{$c})) {
-      return {%{$b->{$c}}}
     } else {
-      return {}
+        return undef;
     }
-  }
 
-  # Inverses: join hash tables... in conflict, $self is used
-  $new->{inverses} = _ffjoin("inverses",$other,$self);
+    # If some of the top is _top_, the other is choosed. If
+    # there are two different tops, use the first ($self) one
+    if ($other->{name} eq $self->{name}) {
+        $new->{name} = $self->{name}
 
-  # Descriptions: in conflict, $self is used
-  $new->{descriptions} = _ffjoin("descriptions",$other,$self);
+    } elsif ($other->{name} eq "_top_") {
+        $new->{name} = $self->{name}
 
-  # Externals: union
-  $new->{externals} = _ffjoin("externals",$self,$other);
+    } elsif ($self->{name} eq "_top_") {
+        $new->{name} = $other->{name}
 
-  # Languages: union
-  $new->{languages} = _ffjoin("languages",$self,$other);
-  # delete($new->{languages}{"_"}) if ($new->{baselang} ne "_");
-
-  # Get terms for the new thesaurus
-  my @terms = _set_of(keys  %{$self->{ $self->{baselang}}},
-		      keys  %{$other->{$other->{baselang}}});
-
-  # Para cada termo do thesaurus...
-  for my $term (@terms) {
-
-    # existe em ambos...
-    if ($self->isDefined($term) && $other->isDefined($term)) {
-      my ($a_def,$b_def) = ($self->_definition($term),
-                            $other->_definition($term));
-      my $def = $a_def;
-
-      $new->{defined}{lc($def)} = $def;
-
-      my @class = _set_of(keys %{$self->{$self->{baselang}}{$a_def}},
-                         keys %{$other->{$other->{baselang}}{$b_def}});
-
-      # para cada uma das suas relações...
-      for my $class (@class) {
-	if ($class eq "_NAME_") {
-
-        #  print STDERR Dumper($new->{$new->{baselang}}{$def});
-	  # optar pela forma do thesaurus A
-	  $new->{$new->{baselang}}{$def}{_NAME_} = $def;
-
-        } elsif ($new->{externals}{$class}) {
-	  if (exists($self->{$self->{baselang}}{$a_def}{$class})) {
-            push @{$new->{$new->{baselang}}{$def}{$class}}, @{$self->{$self->{baselang}}{$a_def}{$class}},
-          }
-	  if (exists($other->{$other->{baselang}}{$b_def}{$class})) {
-            push @{$new->{$new->{baselang}}{$def}{$class}}, @{$other->{$other->{baselang}}{$b_def}{$class}},
-          }
-
-	} elsif ($new->{languages}{$class}) {
-
-	  $new->{$new->{baselang}}{$def}{$class} = "_";
-
-	} else {
-	  if (exists($self->{$self->{baselang}}{$a_def}{$class}) &&
-	      exists($other->{$other->{baselang}}{$b_def}{$class})) {
-
-	    # Join lists
-	    my %there;
-	    @there{@{$self->{$self->{baselang}}{$a_def}{$class}}}=1 x @{$self->{$self->{baselang}}{$a_def}{$class}};
-
-	    push @{$new->{$new->{baselang}}{$def}{$class}}, keys %there;
-
-	    for (@{$other->{$other->{baselang}}{$b_def}{$class}}) {
-	      unless ($there{$_}) {
-		push @{$new->{$new->{baselang}}{$def}{$class}}, $_;
-	      }
-	      $there{$_} = 1;
-	    }
-
-	  } elsif (exists($self->{$self->{baselang}}{$a_def}{$class})) {
-	    $new->{$new->{baselang}}{$def} = $self->{$self->{baselang}}{$a_def}{$class};
-	  } else { ## other->b_def->class
-	    $new->{$new->{baselang}}{$def} = $other->{$other->{baselang}}{$b_def}{$class};
-	  }
-	}
-      }
-
-    } elsif ($self->isDefined($term)) {
-      $new->{defined}{lc($term)} = $self->_definition($term);
-      $new->{$new->{baselang}}{$term} = $self->{$self->{baselang}}{$term};
-    } else { ### $other->isDefined($term)
-      $new->{defined}{lc($term)} = $other->_definition($term);
-      $new->{$new->{baselang}}{$term} = $other->{$other->{baselang}}{$term};
+    } else {
+        $new->{name} = $self->{name}
     }
-  }
 
+    # VERSION: current module version
+    $new->{version} = $VERSION;
 
-  return bless($new);
+    sub _ffjoin {
+        # key, hash1ref, hash2ref
+        my ($c,$a,$b) = @_;
+        if (exists($a->{$c}) && exists($b->{$c})) {
+            return {%{$a->{$c}},%{$b->{$c}}};
+        } elsif (exists($a->{$c})) {
+            return {%{$a->{$c}}}
+        } elsif (exists($b->{$c})) {
+            return {%{$b->{$c}}}
+        } else {
+            return {}
+        }
+    }
+
+    # Inverses: join hash tables... in conflict, $self is used
+    $new->{inverses} = _ffjoin("inverses",$other,$self);
+
+    # Descriptions: in conflict, $self is used
+    $new->{descriptions} = _ffjoin("descriptions",$other,$self);
+
+    # Externals: union
+    $new->{externals} = _ffjoin("externals",$self,$other);
+
+    # Languages: union
+    $new->{languages} = _ffjoin("languages",$self,$other);
+    # delete($new->{languages}{"_"}) if ($new->{baselang} ne "_");
+
+    # Get terms for the new thesaurus
+    my @terms = _set_of(keys  %{$self ->{$self ->{baselang}}},
+                        keys  %{$other->{$other->{baselang}}});
+
+    # Para cada termo do thesaurus...
+    for my $term (@terms) {
+
+        # existe em ambos...
+        if ($self->isDefined($term) && $other->isDefined($term)) {
+            my ($a_def,$b_def) = ($self->_definition($term),
+                                  $other->_definition($term));
+            my $def = $a_def;
+
+            $new->{defined}{lc($def)} = $def;
+
+            my @class = _set_of(keys %{$self ->{$self ->{baselang}}{$a_def}},
+                                keys %{$other->{$other->{baselang}}{$b_def}});
+            
+            # para cada uma das suas relações...
+            for my $class (@class) {
+                if ($class eq "_NAME_") {
+
+                    #  print STDERR Dumper($new->{$new->{baselang}}{$def});
+                    # optar pela forma do thesaurus A
+                    $new->{$new->{baselang}}{$def}{_NAME_} = $def;
+
+                } elsif ($new->{externals}{$class}) {
+                    if (exists($self->{$self->{baselang}}{$a_def}{$class})) {
+                        push @{$new->{$new->{baselang}}{$def}{$class}},
+                        @{$self->{$self->{baselang}}{$a_def}{$class}};
+                    }
+                    if (exists($other->{$other->{baselang}}{$b_def}{$class})) {
+                        push @{$new->{$new->{baselang}}{$def}{$class}},
+                        @{$other->{$other->{baselang}}{$b_def}{$class}};
+                    }
+
+                } elsif ($new->{languages}{$class}) {
+                    $new->{$new->{baselang}}{$def}{$class} = "_";
+
+                } else {
+                    if (exists($self ->{$self ->{baselang}}{$a_def}{$class}) &&
+                        exists($other->{$other->{baselang}}{$b_def}{$class})) {
+
+                        # Join lists
+                        my %there;
+                        @there{@{$self->{$self->{baselang}}{$a_def}{$class}}} =
+                            1 x @{$self->{$self->{baselang}}{$a_def}{$class}};
+
+                        push @{$new->{$new->{baselang}}{$def}{$class}}, keys %there;
+
+                        for (@{$other->{$other->{baselang}}{$b_def}{$class}}) {
+                            unless ($there{$_}) {
+                                push @{$new->{$new->{baselang}}{$def}{$class}}, $_;
+                            }
+                            $there{$_} = 1;
+                        }
+
+                    } elsif (exists($self->{$self->{baselang}}{$a_def}{$class})) {
+                        $new->{$new->{baselang}}{$def}{$class} =
+                            $self->{$self->{baselang}}{$a_def}{$class};
+                    } else { ## other->b_def->class
+                        $new->{$new->{baselang}}{$def}{$class} =
+                            $other->{$other->{baselang}}{$b_def}{$class};
+                    }
+                }
+            }
+
+        } elsif ($self->isDefined($term)) {
+            $new->{defined}{lc($term)} = $self->_definition($term);
+            $new->{$new->{baselang}}{$term} = $self->{$self->{baselang}}{$term};
+        } else { ### $other->isDefined($term)
+            $new->{defined}{lc($term)} = $other->_definition($term);
+            $new->{$new->{baselang}}{$term} = $other->{$other->{baselang}}{$term};
+        }
+    }
+
+    return bless($new);
 }
 
 

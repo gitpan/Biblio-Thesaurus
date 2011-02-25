@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.38 Fri Feb 25 17:59:59 2011
+	 - Fixed multiload (I hope). Added respective test.
+
 0.37 Tue Nov 09 21:56:00 2010
      - Added toHash method to export tree of relations;
      - Some more // for down-translation method that was issuing many
