@@ -41,3 +41,4 @@ t/03_toHash.t
 examples/animals2.iso
 examples/animals1.iso
 t/11_multiload.t
+examples/thesaurus2graphviz

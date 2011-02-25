@@ -1,7 +1,10 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.39 Fri Feb 25 21:17:41 WET 2011
+     - Added missing file to MANIFEST
+
 0.38 Fri Feb 25 17:59:59 2011
-	 - Fixed multiload (I hope). Added respective test.
+     - Fixed multiload (I hope). Added respective test.
 
 0.37 Tue Nov 09 21:56:00 2010
      - Added toHash method to export tree of relations;
