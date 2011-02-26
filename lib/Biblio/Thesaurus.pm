@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.39';
+our $VERSION = '0.40';
 
 # Module Stuff
 our @ISA = qw(Exporter);

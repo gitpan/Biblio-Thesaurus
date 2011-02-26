@@ -1,5 +1,8 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.40 Sat Feb 26 18:14:13 WET 2011
+     - Yet another missing file in MANIFEST
+
 0.39 Fri Feb 25 21:17:41 WET 2011
      - Added missing file to MANIFEST
 
