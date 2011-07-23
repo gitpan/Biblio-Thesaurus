@@ -21,4 +21,4 @@ requires:
   Storable: 1.0006
   Test::More: 0
   XML::TMX: 0.12
-version: 0.41
+version: 0.42

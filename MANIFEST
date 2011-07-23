@@ -19,7 +19,7 @@ bin/thesaurusV
 bin/thesaurusTranslate
 bin/thesaurus2TMX
 bin/thesaurus2tex
-bin/thesaurusBrowser
+# bin/thesaurusBrowser
 INSTALL
 lib/Biblio/Thesaurus.pm
 Makefile.PL
