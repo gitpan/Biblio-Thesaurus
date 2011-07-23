@@ -104,7 +104,7 @@ sub ambsheader{
 } .
  ($nostyle
   ?""
-  : qq{<link href="http://eremita.di.uminho.pt/~ambs/style.css" rel="stylesheet" type="text/css"/>\n}).
+  : qq{<link href="http://natura.di.uminho.pt/style.css" rel="stylesheet" type="text/css"/>\n}).
  qq{
  </head>
  <body>

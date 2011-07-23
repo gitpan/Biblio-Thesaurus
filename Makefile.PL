@@ -39,6 +39,7 @@ if ($@) {
 WriteMakefile(
 	      'NAME'	     => 'Biblio::Thesaurus',
 	      'VERSION_FROM' => 'lib/Biblio/Thesaurus.pm',
+          'ABSTRACT_FROM' => 'lib/Biblio/Thesaurus.pm',
 	      'EXE_FILES'    => [@scripts],
 	      'PREREQ_PM'    => {%reqmodules},
 	     );

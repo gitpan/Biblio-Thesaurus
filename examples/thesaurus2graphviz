@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-our ($shape,$h,$r,$of);
+our ($shape,$h,$r,$of,$t);
 my %par=();
 my %nodepar=();
 my %grel=(NT=>1);        ## graph relations
@@ -28,6 +28,7 @@ $the->downtr( { -default => sub {            ## term rel @terms
                     if (defined $grel{$rel}) {
                         for (@terms) {
                             my $ttt = $_ || "??";
+                            next if (defined $t and $t ne $term or $t ne $ttt); 
                             push @$NTS, [$term,  $ttt];
                         }
                     }
@@ -76,8 +77,11 @@ thesaurus2graphviz - draw a biblio::thesaurus graph
        'hexagon', 'octagon')
 
  -r=INST,PART      graph relation = {NT, INST, PART }
+        default graph relation = {NT}
 
  -of=svg   output format (def:png)
+
+ -t=term   show only "term" and his neighbours
 
 =head1 AUTHOR
 

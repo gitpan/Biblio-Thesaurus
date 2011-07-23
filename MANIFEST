@@ -49,3 +49,4 @@ bin/thesaurus2tageditor
 docs/internals.pod
 examples/tabterm
 examples/ex.tax
+META.json                                Module JSON meta-data (added by MakeMaker)
