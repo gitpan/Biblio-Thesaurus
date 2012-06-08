@@ -1,20 +1,15 @@
 use ExtUtils::MakeMaker;
 use 5.010;
 my @scripts = ('bin/thesaurus2any',
-               'bin/thesaurus2biling',
-               'bin/thesaurusSC',
-               'bin/thesaurusV',
 	       'bin/thesaurus2htmls',
 	       'bin/tag2thesaurus',
 	       'bin/tax2thesaurus',
 	       'bin/thesaurusTranslate',
-	       'examples/thesaurus2graphviz',
-	       'bin/thesaurus2tex',
-               'bin/biling2thesaurus');
+	       'bin/thesaurus2tex');
 
 my %reqmodules = ('Test::More' => 0,
-		  'Storable' => '1.0006');
-
+                  'CGI'        => 0,
+                  'Storable'   => '1.0006');
 
 ## Test for XML::TMX
 

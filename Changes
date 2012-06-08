@@ -1,5 +1,9 @@
 Revision history for Perl extension Biblio::Thesaurus.
 
+0.43 Fri Jun  8 17:34:05 WEST 2012 - r11219
+     - Fixed pod encoding issues.
+     - Moved some scripts to examples folder.
+
 0.42 Sat Jul 23 20:08:26 WEST 2011
      - Removed stupid script from the module.
 

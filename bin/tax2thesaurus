@@ -1,8 +1,8 @@
 #!/usr/bin/perl -s
 
 use strict;
-my @tab=(0);
-my @ant=("topo");
+my @tab=(-1);
+my @ant=("_top");
 my $ind;
 my $inda=0;
 
@@ -19,8 +19,9 @@ for my $file (@ARGV){
    if(/^([ .-]*)(\S.*)/){
       $termo = $2;
       $ind = length($1);
+##      print STDERR "Deb: $_($termo/$ind)\n";
       if ($ind <= $inda) { 
-        while($ind <= $tab[-1]){ pop(@tab); pop(@ant);}
+        while(@tab and $ind <= $tab[-1]){ pop(@tab); pop(@ant);}
       }
       push (@tab,$ind); 
       push (@ant,$termo);
@@ -30,6 +31,71 @@ for my $file (@ARGV){
  }
  close F;
 }
+
+
+__END__
+
+=head1 NAME
+
+tax2thesaurus - indented taxonomy to thesaurus
+
+=head1 SYNOPSIS
+
+ tax2thesaurus file.tax > file.the
+
+=head1 DESCRIPTION
+
+A top term C<_top> is added to the taxonomy.
+
+=head2 example of the taxonomy format
+
+ science
+   physics
+      dynamics
+   math
+      algebra
+      trignometry
+ literature
+
+=head2 Correspondent output
+
+ science
+ BT  _top
+ #lev 1
+ 
+ physics
+ BT  science
+ #lev 2
+ 
+ dynamics
+ BT  physics
+ #lev 3
+ 
+ math
+ BT  science
+ #lev 2
+ 
+ algebra
+ BT  math
+ #lev 3
+ 
+ trignometry
+ BT  math
+ #lev 3
+ 
+ literature
+ BT  _top
+ #lev 1
+ 
+=head1 AUTHOR
+
+J.Joao Almeida, jj@di.uminho.pt
+
+=head1 SEE ALSO
+
+perl(1).
+
+=cut      
 
 __END__
 

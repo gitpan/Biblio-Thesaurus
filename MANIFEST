@@ -11,11 +11,11 @@ examples/thesaurus.english
 examples/thesaurus.portuguese
 bin/thesaurus2any
 bin/thesaurus2htmls
-bin/biling2thesaurus
+examples/biling2thesaurus
 bin/tag2thesaurus
-bin/thesaurus2biling
-bin/thesaurusSC
-bin/thesaurusV
+examples/thesaurus2biling
+examples/thesaurusSC
+examples/thesaurusV
 bin/thesaurusTranslate
 bin/thesaurus2TMX
 bin/thesaurus2tex

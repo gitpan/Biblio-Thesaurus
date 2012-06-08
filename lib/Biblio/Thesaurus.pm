@@ -10,7 +10,7 @@ use CGI qw/:standard/;
 use Data::Dumper;
 
 # Version
-our $VERSION = '0.42';
+our $VERSION = '0.43';
 
 # Module Stuff
 our @ISA = qw(Exporter);
@@ -1511,6 +1511,8 @@ sub _set_of {
 1;
 __END__
 
+=encoding UTF-8
+
 =head1 NAME
 
 Biblio::Thesaurus - Perl extension for managing ISO thesaurus
@@ -1733,7 +1735,7 @@ Example:
   %desc SN Note of Scope
   %description IOF Instance of
 
-If you are constructing a multi-lingue thesaurus, you will want to translate
+If you are constructing a multilingual thesaurus, you will want to translate
 the relation class description. To do this, you should use the C<description>
 command with the language in from of it:
 
@@ -1752,7 +1754,7 @@ Note that you can specify more than one relation type per line.
 
 =item B<lang>uages
 
-This other command permits the construction of a multi-lingue thesaurus. TO
+This other command permits the construction of a multilingual thesaurus. TO
 specify languages classifiers (like PT, EN, FR, and so on) you can use one
 of these lines:
 
@@ -1898,7 +1900,7 @@ called with an argument.
 
 =head2 top_name
 
-Deprectated. See C<<topName>>;
+Deprecated. See C<<topName>>;
 
 =head2 addRelation
 
@@ -1955,7 +1957,7 @@ Use this method to check if a relation is a Language.
 
 =head2 getdefinition
 
-Deprectaed. Use C<<getDefinition>
+Deprecated. Use C<<getDefinition>
 
 =head2 getDefinition
 
@@ -2042,7 +2044,7 @@ page name.
 =item level1hide
 
 a reference to a list of relations to do not show on the first level.
-Defaults to the empty list. Usefull to hide the 'LEN' relation when
+Defaults to the empty list. Useful to hide the 'LEN' relation when
 using Library::Simple.
 
 =item level2size
@@ -2152,7 +2154,7 @@ with C<$term>
 =head2 toTex
 
 Writes a thesaurus in LaTeX format...
-The first argument is used fo pass a tag substitution hash.
+The first argument is used to pass a tag substitution hash.
 It uses downtr function to make the translation; a downtr handler can be given
 to tune some transformations details...
 
@@ -2184,7 +2186,7 @@ Returns a Hash reference with a tree based on NT relation. Other
 relation can be supplied as an argument. Future versions might include
 language selection.
 
-  print $thesaurus->toJson();
+  print $thesaurus->toHash();
 
 =head1 AUTHOR
 
@@ -2199,7 +2201,7 @@ http://natura.di.uminho.pt, and access the SVN tree.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2000-2005 Natura Project, All Rights Reserved.
+Copyright 2000-2012 Project Natura.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
